@@ -1,5 +1,5 @@
-import InicioSesion from './components/Inicio-Sesion';
+import Enrutador from './router/enrutador';
 
 export default function App() {
-  return <InicioSesion />;
+  return <Enrutador />;
 }

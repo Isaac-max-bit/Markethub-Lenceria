@@ -1,8 +1,16 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // 1. Importar el hook de navegación
 import './Inicio-Sesion.css';
 
 export default function InicioSesion() {
   const [isRegister, setIsRegister] = useState(false);
+  const navigate = useNavigate(); // 2. Inicializar la función de navegación
+
+  // Función para manejar el inicio de sesión exitoso
+  const handleLoginSubmit = (e) => {
+    e.preventDefault();
+    navigate('/home'); // 3. Redirigir a la ruta principal
+  };
 
   return (
     <main className="lenceria-container">
@@ -46,7 +54,8 @@ export default function InicioSesion() {
                 position: isRegister ? 'absolute' : 'relative' 
               }}
             >
-              <form className="card" onSubmit={(e) => e.preventDefault()} autoComplete="off">
+              {/* Se añade la función handleLoginSubmit en el onSubmit */}
+              <form className="card" onSubmit={handleLoginSubmit} autoComplete="off">
                 <div className="card-header">
                   <h2 className="card-title">Iniciar sesión</h2>
                   <p className="card-description">
@@ -113,7 +122,7 @@ export default function InicioSesion() {
                 position: isRegister ? 'relative' : 'absolute' 
               }}
             >
-              <form className="card" onSubmit={(e) => e.preventDefault()} autoComplete="off">
+              <form className="card" onSubmit={(e) => { e.preventDefault(); navigate('/home'); }} autoComplete="off">
                 <div className="card-header">
                   <h2 className="card-title">Crear cuenta</h2>
                   <p className="card-description">
