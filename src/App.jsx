@@ -1,5 +1,10 @@
-import Enrutador from './router/enrutador';
+import { BrowserRouter } from "react-router-dom";
+import AppRouter from "./router/AppRouter";
 
 export default function App() {
-  return <Enrutador />;
+  return (
+    <BrowserRouter>
+      <AppRouter />
+    </BrowserRouter>
+  );
 }

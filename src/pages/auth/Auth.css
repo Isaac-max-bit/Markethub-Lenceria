@@ -1,0 +1,186 @@
+@keyframes entrar-desde-izquierda {
+  from {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes entrar-desde-derecha {
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.enter-left {
+  animation: entrar-desde-izquierda 0.45s ease both;
+}
+
+.enter-right {
+  animation: entrar-desde-derecha 0.45s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .enter-left,
+  .enter-right {
+    animation: none;
+  }
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.card-header {
+  display: grid;
+  gap: 6px;
+}
+
+.card-header h2 {
+  font-family: var(--font-heading);
+  font-size: 42px;
+  font-weight: 500;
+  line-height: 1.1;
+}
+
+.card-description {
+  color: var(--mauve);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.card-content {
+  display: grid;
+  gap: 18px;
+}
+
+.card-footer {
+  display: grid;
+  gap: 10px;
+}
+
+.input-group label {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.input-box {
+  position: relative;
+}
+
+.input-box i {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--mauve);
+  font-size: 14px;
+}
+
+.input-box input {
+  width: 100%;
+  height: 50px;
+  padding: 0 42px;
+  border: 1px solid var(--border);
+  outline: none;
+  background: var(--white);
+  color: var(--plum);
+  font-family: var(--font-body);
+  font-size: 14px;
+  transition: 0.3s;
+}
+
+.input-box input::placeholder {
+  color: #b9a0a6;
+}
+
+.input-box input:focus {
+  border-color: var(--dusty-rose);
+  box-shadow: 0 0 0 3px rgba(243, 196, 192, 0.55);
+}
+
+.password-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.password-title a,
+.remember a {
+  color: var(--dusty-rose);
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.password-title a:hover {
+  text-decoration: underline;
+}
+
+.remember {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--mauve);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.remember input {
+  accent-color: var(--dusty-rose);
+  width: 16px;
+  height: 16px;
+}
+
+.button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 50px;
+  border: none;
+  background: var(--dusty-rose);
+  color: var(--white);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.button:hover {
+  background: var(--wine);
+}
+
+.button:focus-visible {
+  outline: 3px solid var(--champagne);
+  outline-offset: 2px;
+}
+
+.button-outline {
+  border: 1px solid var(--border);
+  background: var(--white);
+  color: var(--plum);
+}
+
+.button-outline:hover {
+  background: var(--silk);
+  border-color: var(--petal);
+}
+
+@media (max-width: 500px) {
+  .card-header h2 {
+    font-size: 36px;
+  }
+}
