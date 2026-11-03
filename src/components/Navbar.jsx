@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Menu, Search, ShoppingBag, User, X } from "lucide-react";
-import { mainLinks } from "../data/navData";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { ChevronDown, Menu, Search, ShoppingBag, User, X } from "lucide-react";
+import { mainLinks, moreLinks } from "../data/navData";
 
 const ICON_STROKE = 1.25;
 
@@ -10,7 +10,7 @@ const iconButton =
 
 const desktopLinkClass = (isActive, highlight) =>
   [
-    "relative text-[13px] tracking-wide transition-colors after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-left after:bg-champagne after:transition-transform hover:after:scale-x-100",
+    "relative text-[13px] leading-none tracking-wide transition-colors after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-left after:bg-champagne after:transition-transform hover:after:scale-x-100",
     highlight ? "text-dusty-rose" : "text-plum hover:text-wine",
     isActive ? "after:scale-x-100" : "after:scale-x-0",
   ].join(" ");
@@ -22,16 +22,25 @@ const mobileLinkClass = (isActive, highlight) =>
     isActive ? "font-medium" : "",
   ].join(" ");
 
+const isLinkActive = (to, pathname, search) => {
+  const [path, query = ""] = to.split("?");
+  if (pathname !== path) return false;
+
+  return (
+    new URLSearchParams(search).get("categoria") ===
+    new URLSearchParams(query).get("categoria")
+  );
+};
+
+const mobileLinks = [...mainLinks, ...moreLinks];
+
 function Wordmark() {
   return (
-    <span className="flex flex-col items-center whitespace-nowrap leading-none">
-      <span
-        style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
-        className="pl-[0.3em] text-[22px] font-medium tracking-[0.3em] text-wine xl:text-[24px]"
-      >
-        LENCERÍA LR
-      </span>
-      <span aria-hidden="true" className="mt-1.5 h-px w-10 bg-champagne" />
+    <span
+      style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
+      className="block whitespace-nowrap pl-[0.3em] text-[22px] font-medium leading-none tracking-[0.3em] text-wine xl:text-[24px]"
+    >
+      LENCERÍA LR
     </span>
   );
 }
@@ -39,28 +48,49 @@ function Wordmark() {
 export default function Navbar({ cartCount = 0 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const [query, setQuery] = useState("");
 
   const searchInputRef = useRef(null);
-  const { pathname } = useLocation();
+  const moreRef = useRef(null);
+  const { pathname, search } = useLocation();
   const navigate = useNavigate();
+
+  const moreActive = moreLinks.some((link) =>
+    isLinkActive(link.to, pathname, search),
+  );
 
   useEffect(() => {
     setMenuOpen(false);
     setSearchOpen(false);
-  }, [pathname]);
+    setMoreOpen(false);
+  }, [pathname, search]);
 
   useEffect(() => {
     const onKeyDown = (event) => {
       if (event.key === "Escape") {
         setMenuOpen(false);
         setSearchOpen(false);
+        setMoreOpen(false);
       }
     };
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
+
+  useEffect(() => {
+    if (!moreOpen) return;
+
+    const onPointerDown = (event) => {
+      if (moreRef.current && !moreRef.current.contains(event.target)) {
+        setMoreOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", onPointerDown);
+    return () => document.removeEventListener("mousedown", onPointerDown);
+  }, [moreOpen]);
 
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
@@ -103,18 +133,63 @@ export default function Navbar({ cartCount = 0 }) {
 
             <nav aria-label="Principal" className="hidden xl:block">
               <ul className="flex h-12 items-center gap-6">
-                {mainLinks.map((link) => (
-                  <li key={link.id}>
-                    <NavLink
-                      to={link.to}
-                      className={({ isActive }) =>
-                        desktopLinkClass(isActive, link.highlight)
-                      }
-                    >
-                      {link.label}
-                    </NavLink>
-                  </li>
-                ))}
+                {mainLinks.map((link) => {
+                  const active = isLinkActive(link.to, pathname, search);
+
+                  return (
+                    <li key={link.id} className="flex h-12 items-center">
+                      <Link
+                        to={link.to}
+                        aria-current={active ? "page" : undefined}
+                        className={desktopLinkClass(active, link.highlight)}
+                      >
+                        {link.label}
+                      </Link>
+                    </li>
+                  );
+                })}
+
+                <li ref={moreRef} className="relative flex h-12 items-center">
+                  <button
+                    type="button"
+                    onClick={() => setMoreOpen((open) => !open)}
+                    aria-expanded={moreOpen}
+                    aria-haspopup="true"
+                    className={`${desktopLinkClass(moreActive, false)} flex items-center gap-1`}
+                  >
+                    Más
+                    <ChevronDown
+                      size={14}
+                      strokeWidth={ICON_STROKE}
+                      aria-hidden="true"
+                      className={`transition-transform duration-200 ${
+                        moreOpen ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+
+                  {moreOpen && (
+                    <ul className="absolute left-0 top-full min-w-40 border border-border bg-[#FDF3F1] py-2">
+                      {moreLinks.map((link) => {
+                        const active = isLinkActive(link.to, pathname, search);
+
+                        return (
+                          <li key={link.id}>
+                            <Link
+                              to={link.to}
+                              aria-current={active ? "page" : undefined}
+                              className={`block px-5 py-2 text-[13px] tracking-wide text-plum transition-colors hover:bg-silk/40 hover:text-wine ${
+                                active ? "font-medium" : ""
+                              }`}
+                            >
+                              {link.label}
+                            </Link>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </li>
               </ul>
             </nav>
           </div>
@@ -225,18 +300,21 @@ export default function Navbar({ cartCount = 0 }) {
 
         <nav aria-label="Menú móvil" className="flex-1 overflow-y-auto px-5">
           <ul>
-            {mainLinks.map((link) => (
-              <li key={link.id}>
-                <NavLink
-                  to={link.to}
-                  className={({ isActive }) =>
-                    mobileLinkClass(isActive, link.highlight)
-                  }
-                >
-                  {link.label}
-                </NavLink>
-              </li>
-            ))}
+            {mobileLinks.map((link) => {
+              const active = isLinkActive(link.to, pathname, search);
+
+              return (
+                <li key={link.id}>
+                  <Link
+                    to={link.to}
+                    aria-current={active ? "page" : undefined}
+                    className={mobileLinkClass(active, link.highlight)}
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              );
+            })}
 
             <li>
               <Link

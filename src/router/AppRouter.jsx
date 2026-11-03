@@ -4,6 +4,7 @@ import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
 import MainLayout from "../layouts/MainLayout";
 import Home from "../pages/Home";
+import Products from "../pages/Products";
 
 export default function AppRouter() {
   return (
@@ -17,6 +18,8 @@ export default function AppRouter() {
 
       <Route element={<MainLayout />}>
         <Route path="/home" element={<Home />} />
+        <Route path="/productos" element={<Products />} />
+        <Route path="/ofertas" element={<Products />} />
       </Route>
     </Routes>
   );
