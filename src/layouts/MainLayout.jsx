@@ -1,5 +1,6 @@
 import { Outlet } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 
 const ANNOUNCEMENT = "20% de descuento en todos los productos";
 
@@ -15,6 +16,8 @@ export default function MainLayout() {
       <main>
         <Outlet />
       </main>
+
+      <Footer />
     </div>
   );
 }

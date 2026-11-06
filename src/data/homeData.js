@@ -1,24 +1,37 @@
 import hero1 from "../assets/hero1.jpg";
 import hero2 from "../assets/hero2.jpg";
+import { productos } from "./products";
+
+const desdeCatalogo = (items) =>
+  items.map(({ id, ...extra }) => {
+    const producto = productos.find((p) => p.id === id);
+    return {
+      id: producto.id,
+      name: producto.nombre,
+      price: producto.precio,
+      oldPrice: producto.precioAnterior,
+      ...extra,
+    };
+  });
 
 export const carouselSlides = [
   {
     id: 1,
-    to: "/categoria/conjunto",
+    to: "/productos?categoria=conjuntos",
     alt: "Conjuntos de encaje en tonos suaves",
     image: hero1,
     mobileImage: "https://placehold.co/800x1000/f8d0cb/3e1a26?text=Coleccion+1",
   },
   {
     id: 2,
-    to: "/categoria/brasier",
+    to: "/productos?categoria=brasieres",
     alt: "Brasieres cómodos para todos los días",
     image: hero2,
     mobileImage: "https://placehold.co/800x1000/f3c4c0/3e1a26?text=Coleccion+2",
   },
   {
     id: 3,
-    to: "/categoria/pijama",
+    to: "/productos?categoria=pijamas",
     alt: "Pijamas suaves para descansar",
     image: "https://placehold.co/1600x700/ebd3ce/3e1a26?text=Coleccion+3",
     mobileImage: "https://placehold.co/800x1000/ebd3ce/3e1a26?text=Coleccion+3",
@@ -28,114 +41,90 @@ export const carouselSlides = [
 export const categories = [
   {
     id: 1,
-    slug: "brasier",
+    slug: "brasieres",
     name: "Brasier",
     image: "https://placehold.co/600x700/f8d0cb/3e1a26?text=Brasier",
   },
   {
     id: 2,
-    slug: "pantie",
+    slug: "panties",
     name: "Pantie",
     image: "https://placehold.co/600x700/f3c4c0/3e1a26?text=Pantie",
   },
   {
     id: 3,
-    slug: "conjunto",
+    slug: "conjuntos",
     name: "Conjunto",
     image: "https://placehold.co/600x700/ebd3ce/3e1a26?text=Conjunto",
   },
   {
     id: 4,
-    slug: "pijama",
+    slug: "pijamas",
     name: "Pijama",
     image: "https://placehold.co/900x700/f8d0cb/3e1a26?text=Pijama",
   },
   {
     id: 5,
-    slug: "top",
+    slug: "tops",
     name: "Top",
     image: "https://placehold.co/900x700/f3c4c0/3e1a26?text=Top",
   },
 ];
 
-export const bestSellers = [
+export const bestSellers = desdeCatalogo([
   {
-    id: 1,
-    name: "Brasier de encaje",
-    price: 59900,
+    id: "brasieres-3",
     badge: "Más vendido",
     image: "https://placehold.co/400x500/f8d0cb/3e1a26?text=Producto+1",
   },
   {
-    id: 2,
-    name: "Panty de seda",
-    price: 24900,
+    id: "panties-2",
     badge: "Más vendido",
     image: "https://placehold.co/400x500/f3c4c0/3e1a26?text=Producto+2",
   },
   {
-    id: 3,
-    name: "Conjunto clásico",
-    price: 79900,
+    id: "conjuntos-2",
     badge: "Más vendido",
     image: "https://placehold.co/400x500/ebd3ce/3e1a26?text=Producto+3",
   },
   {
-    id: 4,
-    name: "Top sin costuras",
-    price: 39900,
+    id: "tops-1",
     badge: "Más vendido",
     image: "https://placehold.co/400x500/f8d0cb/3e1a26?text=Producto+4",
   },
   {
-    id: 5,
-    name: "Pijama de satín",
-    price: 94900,
+    id: "pijamas-2",
     badge: "Más vendido",
     image: "https://placehold.co/400x500/f3c4c0/3e1a26?text=Producto+5",
   },
   {
-    id: 6,
-    name: "Brasier push up",
-    price: 64900,
+    id: "brasieres-1",
     badge: "Más vendido",
     image: "https://placehold.co/400x500/ebd3ce/3e1a26?text=Producto+6",
   },
-];
+]);
 
-export const discounted = [
+export const discounted = desdeCatalogo([
   {
-    id: 7,
-    name: "Bralette suave",
-    price: 35900,
-    oldPrice: 44900,
+    id: "brasieres-2",
     image: "https://placehold.co/400x500/f8d0cb/3e1a26?text=Producto+7",
   },
   {
-    id: 8,
-    name: "Camisón satinado",
-    price: 62900,
-    oldPrice: 89900,
+    id: "pijamas-1",
     image: "https://placehold.co/400x500/f3c4c0/3e1a26?text=Producto+8",
   },
   {
-    id: 9,
-    name: "Top de algodón",
-    price: 55900,
-    oldPrice: 69900,
+    id: "tops-2",
     image: "https://placehold.co/400x500/ebd3ce/3e1a26?text=Producto+9",
   },
   {
-    id: 10,
-    name: "Conjunto de encaje",
-    price: 67900,
-    oldPrice: 84900,
+    id: "conjuntos-1",
     image: "https://placehold.co/400x500/f8d0cb/3e1a26?text=Producto+10",
   },
-];
+]);
 
 export const editorialBanner = {
-  to: "/categoria/conjunto",
+  to: "/productos?categoria=conjuntos",
   eyebrow: "Luxury collection",
   title: "Elegancia que comienza contigo",
   cta: "Descubrir la colección",

@@ -14,7 +14,7 @@ export default function ProductCard({ product, className = "" }) {
 
   return (
     <li className={className}>
-      <Link to={`/producto/${product.id}`} className="group block">
+      <Link to={`/productos/${product.id}`} className="group block">
         <div className="relative overflow-hidden bg-silk">
           <img
             src={product.image}

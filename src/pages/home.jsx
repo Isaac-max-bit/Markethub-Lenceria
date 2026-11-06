@@ -43,7 +43,7 @@ export default function Home() {
               }
             >
               <Link
-                to={`/categoria/${category.slug}`}
+                to={`/productos?categoria=${category.slug}`}
                 className="group relative block h-56 overflow-hidden bg-silk md:h-72"
               >
                 <img
