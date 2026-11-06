@@ -1,64 +1,6 @@
-import { useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
-import { categorias, productos, formatoPrecio } from "../data/products";
-
-function TarjetaProducto({ producto }) {
-  const [sinImagen, setSinImagen] = useState(false);
-
-  const descuento = producto.precioAnterior
-    ? Math.round((1 - producto.precio / producto.precioAnterior) * 100)
-    : 0;
-
-  return (
-    <article className="group flex flex-col bg-white border border-border">
-      <div className="relative aspect-3/4 overflow-hidden bg-silk">
-        {sinImagen ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-dusty-rose">
-            <span className="text-3xl">♡</span>
-            <p className="text-xs text-mauve">Fotografía del producto</p>
-          </div>
-        ) : (
-          <img
-            src={producto.imagen}
-            alt={`${producto.nombre} color ${producto.color}`}
-            onError={() => setSinImagen(true)}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-        )}
-
-        {descuento > 0 && (
-          <span className="absolute left-0 top-3 bg-dusty-rose px-2 py-1 text-xs font-medium text-white">
-            -{descuento}%
-          </span>
-        )}
-      </div>
-
-      <div className="flex flex-1 flex-col gap-1 p-4">
-        <p className="text-xs text-mauve">{producto.categoriaNombre}</p>
-        <h3 className="font-heading text-xl text-plum">{producto.nombre}</h3>
-        <p className="text-sm text-mauve">Color: {producto.color}</p>
-
-        <p className="mt-1 flex items-baseline gap-2">
-          <span className="font-medium text-wine">
-            {formatoPrecio.format(producto.precio)}
-          </span>
-          {producto.precioAnterior && (
-            <span className="text-sm text-mauve line-through">
-              {formatoPrecio.format(producto.precioAnterior)}
-            </span>
-          )}
-        </p>
-
-        <Link
-          to={`/productos/${producto.id}`}
-          className="mt-3 border border-wine py-2 text-center text-sm text-wine transition-colors hover:bg-wine hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-dusty-rose"
-        >
-          Ver producto
-        </Link>
-      </div>
-    </article>
-  );
-}
+import { categorias, productos, aTarjeta } from "../data/products";
+import ProductCard from "../components/ProductCard";
 
 export default function Products() {
   const { pathname } = useLocation();
@@ -156,11 +98,11 @@ export default function Products() {
           {productosVisibles.length === 1 ? "producto" : "productos"}
         </p>
 
-        <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
+        <ul className="mt-4 grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 lg:grid-cols-4 lg:gap-x-6">
           {productosVisibles.map((producto) => (
-            <TarjetaProducto key={producto.id} producto={producto} />
+            <ProductCard key={producto.id} product={aTarjeta(producto)} />
           ))}
-        </div>
+        </ul>
       </section>
     </main>
   );

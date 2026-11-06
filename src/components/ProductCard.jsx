@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 
 const formatPrice = (value) =>
@@ -8,6 +9,8 @@ const formatPrice = (value) =>
   }).format(value);
 
 export default function ProductCard({ product, className = "" }) {
+  const [sinImagen, setSinImagen] = useState(false);
+
   const badge = product.oldPrice
     ? `-${Math.round((1 - product.price / product.oldPrice) * 100)}%`
     : product.badge;
@@ -16,12 +19,20 @@ export default function ProductCard({ product, className = "" }) {
     <li className={className}>
       <Link to={`/productos/${product.id}`} className="group block">
         <div className="relative overflow-hidden bg-silk">
-          <img
-            src={product.image}
-            alt={product.name}
-            loading="lazy"
-            className="w-full aspect-[4/5] object-cover transition-transform duration-500 group-hover:scale-105"
-          />
+          {sinImagen ? (
+            <div className="flex aspect-[4/5] w-full flex-col items-center justify-center gap-2 text-dusty-rose">
+              <span className="text-3xl">♡</span>
+              <p className="text-xs text-mauve">Fotografía del producto</p>
+            </div>
+          ) : (
+            <img
+              src={product.image}
+              alt={product.name}
+              loading="lazy"
+              onError={() => setSinImagen(true)}
+              className="w-full aspect-[4/5] object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+          )}
           {badge && (
             <span className="absolute left-3 top-3 bg-white px-3 py-1 text-[10px] uppercase tracking-widest text-plum">
               {badge}

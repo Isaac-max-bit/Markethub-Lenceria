@@ -84,3 +84,11 @@ export const formatoPrecio = new Intl.NumberFormat("es-CO", {
   currency: "COP",
   maximumFractionDigits: 0,
 });
+
+export const aTarjeta = (producto) => ({
+  id: producto.id,
+  name: producto.nombre,
+  price: producto.precio,
+  oldPrice: producto.precioAnterior,
+  image: producto.imagen,
+});
