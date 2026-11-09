@@ -1,11 +1,34 @@
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { registrarUsuario } from "../../api/usuarios";
+import { guardarSesion } from "../../api/sesion";
 
 export default function Register() {
   const navigate = useNavigate();
+  const [error, setError] = useState("");
+  const [enviando, setEnviando] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    navigate("/dashboard");
+    setError("");
+    setEnviando(true);
+
+    const datos = new FormData(e.currentTarget);
+
+    try {
+      const usuario = await registrarUsuario({
+        nombre: String(datos.get("nombre") || ""),
+        email: String(datos.get("email") || ""),
+        password: String(datos.get("password") || ""),
+      });
+
+      guardarSesion(usuario, true);
+      navigate("/home");
+    } catch (fallo) {
+      setError(fallo.message);
+    } finally {
+      setEnviando(false);
+    }
   };
 
   return (
@@ -59,15 +82,26 @@ export default function Register() {
                 name="password"
                 placeholder="••••••••"
                 autoComplete="new-password"
+                minLength={8}
                 required
               />
             </div>
           </div>
+
+          {error && (
+            <p className="form-message form-message-error" role="alert">
+              {error}
+            </p>
+          )}
+
+          <p className="form-hint">
+            La contraseña debe tener al menos 8 caracteres.
+          </p>
         </div>
 
         <div className="card-footer">
-          <button type="submit" className="button">
-            Crear cuenta
+          <button type="submit" className="button" disabled={enviando}>
+            {enviando ? "Creando cuenta…" : "Crear cuenta"}
           </button>
           <Link to="/login" className="button button-outline">
             Ya tengo cuenta

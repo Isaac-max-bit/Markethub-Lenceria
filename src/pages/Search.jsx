@@ -1,24 +1,29 @@
 import { Link, useSearchParams } from "react-router-dom";
-import { productos, aTarjeta } from "../data/products";
+import { aTarjeta, normalizarTexto } from "../api/catalogo";
+import { useProductos } from "../hooks/useProductos";
 import ProductCard from "../components/ProductCard";
-
-const normalizar = (texto) =>
-  texto
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+import EstadoCatalogo from "../components/EstadoCatalogo";
 
 export default function Search() {
   const [searchParams] = useSearchParams();
-  const termino = (searchParams.get("q") || "").trim();
+  const { productos, cargando, error, recargar } = useProductos();
 
-  const palabras = normalizar(termino).split(/\s+/).filter(Boolean);
+  const termino = (searchParams.get("q") || "").trim();
+  const palabras = normalizarTexto(termino).split(/\s+/).filter(Boolean);
 
   const resultados = palabras.length
     ? productos.filter((producto) => {
-        const texto = normalizar(
-          `${producto.nombre} ${producto.color} ${producto.categoriaNombre}`,
+        const texto = normalizarTexto(
+          [
+            producto.nombre,
+            producto.color,
+            producto.categoriaNombre,
+            producto.descripcion,
+          ]
+            .filter(Boolean)
+            .join(" "),
         );
+
         return palabras.every((palabra) => texto.includes(palabra));
       })
     : [];
@@ -40,18 +45,28 @@ export default function Search() {
           {termino ? `Resultados para “${termino}”` : "Búsqueda"}
         </h1>
         <p className="mt-3 text-mauve">
-          {termino
-            ? `${resultados.length} ${
-                resultados.length === 1
-                  ? "producto encontrado"
-                  : "productos encontrados"
-              }`
-            : "Escribe lo que buscas en el buscador."}
+          {cargando || error
+            ? "Consultando el catálogo…"
+            : termino
+              ? `${resultados.length} ${
+                  resultados.length === 1
+                    ? "producto encontrado"
+                    : "productos encontrados"
+                }`
+              : "Escribe lo que buscas en el buscador."}
         </p>
       </section>
 
       <section className="mx-auto max-w-6xl px-6 py-10">
-        {resultados.length > 0 ? (
+        {cargando || error ? (
+          <EstadoCatalogo
+            cargando={cargando}
+            error={error}
+            onReintentar={recargar}
+          >
+            {null}
+          </EstadoCatalogo>
+        ) : resultados.length > 0 ? (
           <ul className="grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 lg:grid-cols-4 lg:gap-x-6">
             {resultados.map((producto) => (
               <ProductCard key={producto.id} product={aTarjeta(producto)} />

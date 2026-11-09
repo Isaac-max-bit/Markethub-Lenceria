@@ -1,11 +1,33 @@
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { iniciarSesion } from "../../api/usuarios";
+import { guardarSesion } from "../../api/sesion";
 
 export default function Login() {
   const navigate = useNavigate();
+  const [error, setError] = useState("");
+  const [enviando, setEnviando] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    navigate("/dashboard");
+    setError("");
+    setEnviando(true);
+
+    const datos = new FormData(e.currentTarget);
+
+    try {
+      const usuario = await iniciarSesion({
+        email: String(datos.get("email") || ""),
+        password: String(datos.get("password") || ""),
+      });
+
+      guardarSesion(usuario, datos.get("recordar") === "on");
+      navigate("/home");
+    } catch (fallo) {
+      setError(fallo.message);
+    } finally {
+      setEnviando(false);
+    }
   };
 
   return (
@@ -51,14 +73,28 @@ export default function Login() {
           </div>
 
           <label className="remember">
-            <input type="checkbox" />
+            <input type="checkbox" name="recordar" />
             <span>Recordarme</span>
           </label>
+
+          {error && (
+            <p className="form-message form-message-error" role="alert">
+              {error}
+            </p>
+          )}
+
+          <p className="form-hint">
+            ¿No tienes cuenta?{" "}
+            <Link to="/registro" className="form-link">
+              Regístrate aquí
+            </Link>
+            .
+          </p>
         </div>
 
         <div className="card-footer">
-          <button type="submit" className="button">
-            Iniciar sesión
+          <button type="submit" className="button" disabled={enviando}>
+            {enviando ? "Ingresando…" : "Iniciar sesión"}
           </button>
           <Link to="/registro" className="button button-outline">
             Crear cuenta nueva

@@ -3,11 +3,12 @@ import HeroCarousel from "../components/HeroCarousel";
 import ProductCard from "../components/ProductCard";
 import ProductCarousel from "../components/ProductCarousel";
 import SectionTitle from "../components/SectionTitle";
+import EstadoCatalogo from "../components/EstadoCatalogo";
+import { aTarjeta } from "../api/catalogo";
+import { useProductos } from "../hooks/useProductos";
 import {
   carouselSlides,
   categories,
-  bestSellers,
-  discounted,
   editorialBanner,
   benefits,
   testimonials,
@@ -25,6 +26,17 @@ function Section({ title, subtitle, children, className = "" }) {
 }
 
 export default function Home() {
+  const { productos, cargando, error, recargar } = useProductos();
+
+  const bestSellers = productos
+    .slice(0, 6)
+    .map((producto) => ({ ...aTarjeta(producto), badge: "Más vendido" }));
+
+  const discounted = productos
+    .filter((producto) => producto.precioAnterior)
+    .slice(0, 4)
+    .map(aTarjeta);
+
   return (
     <>
       <HeroCarousel slides={carouselSlides} />
@@ -67,10 +79,18 @@ export default function Home() {
         subtitle="Las favoritas de nuestras clientas, elegidas por su comodidad y su ajuste"
         className="bg-silk/30"
       >
-        <ProductCarousel
-          products={bestSellers}
-          label="Productos más vendidos"
-        />
+        <EstadoCatalogo
+          cargando={cargando}
+          error={error}
+          vacio={bestSellers.length === 0}
+          mensajeVacio="Todavía no hay productos cargados."
+          onReintentar={recargar}
+        >
+          <ProductCarousel
+            products={bestSellers}
+            label="Productos más vendidos"
+          />
+        </EstadoCatalogo>
       </Section>
 
       <section className="border-b border-border">
@@ -118,11 +138,19 @@ export default function Home() {
         title="Productos en descuento"
         subtitle="Las prendas que más te gustan con precios especiales, por tiempo limitado"
       >
-        <ul className="grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-4 md:gap-x-6">
-          {discounted.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </ul>
+        <EstadoCatalogo
+          cargando={cargando}
+          error={error}
+          vacio={discounted.length === 0}
+          mensajeVacio="Por ahora no hay productos en descuento."
+          onReintentar={recargar}
+        >
+          <ul className="grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-4 md:gap-x-6">
+            {discounted.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </ul>
+        </EstadoCatalogo>
       </Section>
 
       <Section

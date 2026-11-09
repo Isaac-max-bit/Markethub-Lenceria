@@ -163,6 +163,40 @@
   background: var(--wine);
 }
 
+.button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.form-message {
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.form-message-error {
+  border-color: #c98b8b;
+  background: #fdf1f1;
+  color: #7a2e2e;
+}
+
+.form-hint {
+  color: var(--mauve);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.form-link {
+  color: var(--dusty-rose);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.form-link:hover {
+  color: var(--wine);
+}
+
 .button:focus-visible {
   outline: 3px solid var(--champagne);
   outline-offset: 2px;

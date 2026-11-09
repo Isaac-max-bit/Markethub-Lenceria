@@ -1,10 +1,13 @@
 import { Link, useLocation, useSearchParams } from "react-router-dom";
-import { categorias, productos, aTarjeta } from "../data/products";
+import { categorias, aTarjeta } from "../api/catalogo";
+import { useProductos } from "../hooks/useProductos";
 import ProductCard from "../components/ProductCard";
+import EstadoCatalogo from "../components/EstadoCatalogo";
 
 export default function Products() {
   const { pathname } = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { productos, cargando, error, recargar } = useProductos();
 
   const enOfertas = pathname === "/ofertas";
 
@@ -93,16 +96,30 @@ export default function Products() {
           </div>
         )}
 
-        <p className={`text-sm text-mauve ${enOfertas ? "" : "mt-8"}`}>
-          {productosVisibles.length}{" "}
-          {productosVisibles.length === 1 ? "producto" : "productos"}
-        </p>
+        {!cargando && !error && (
+          <p className={`text-sm text-mauve ${enOfertas ? "" : "mt-8"}`}>
+            {productosVisibles.length}{" "}
+            {productosVisibles.length === 1 ? "producto" : "productos"}
+          </p>
+        )}
 
-        <ul className="mt-4 grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 lg:grid-cols-4 lg:gap-x-6">
-          {productosVisibles.map((producto) => (
-            <ProductCard key={producto.id} product={aTarjeta(producto)} />
-          ))}
-        </ul>
+        <EstadoCatalogo
+          cargando={cargando}
+          error={error}
+          vacio={productosVisibles.length === 0}
+          mensajeVacio={
+            enOfertas
+              ? "Todavía no hay productos en oferta."
+              : "No hay productos en esta categoría."
+          }
+          onReintentar={recargar}
+        >
+          <ul className="mt-4 grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 lg:grid-cols-4 lg:gap-x-6">
+            {productosVisibles.map((producto) => (
+              <ProductCard key={producto.id} product={aTarjeta(producto)} />
+            ))}
+          </ul>
+        </EstadoCatalogo>
       </section>
     </main>
   );

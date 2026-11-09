@@ -1,7 +1,17 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ChevronDown, Menu, Search, ShoppingBag, User, X } from "lucide-react";
+import {
+  ChevronDown,
+  LogOut,
+  Menu,
+  Search,
+  ShoppingBag,
+  User,
+  X,
+} from "lucide-react";
 import { mainLinks, moreLinks } from "../data/navData";
+import { cerrarSesion } from "../api/sesion";
+import { useSesion } from "../hooks/useSesion";
 
 const ICON_STROKE = 1.25;
 
@@ -55,16 +65,27 @@ export default function Navbar({ cartCount = 0 }) {
   const moreRef = useRef(null);
   const { pathname, search } = useLocation();
   const navigate = useNavigate();
+  const usuario = useSesion();
+
+  const salir = () => {
+    cerrarSesion();
+    navigate("/home");
+  };
 
   const moreActive = moreLinks.some((link) =>
     isLinkActive(link.to, pathname, search),
   );
 
-  useEffect(() => {
+  // Al cambiar de ruta se cierran los menús y el buscador.
+  const [rutaActual, setRutaActual] = useState(`${pathname}${search}`);
+  const ruta = `${pathname}${search}`;
+
+  if (rutaActual !== ruta) {
+    setRutaActual(ruta);
     setMenuOpen(false);
     setSearchOpen(false);
     setMoreOpen(false);
-  }, [pathname, search]);
+  }
 
   useEffect(() => {
     const onKeyDown = (event) => {
@@ -209,13 +230,25 @@ export default function Navbar({ cartCount = 0 }) {
               <Search size={20} strokeWidth={ICON_STROKE} />
             </button>
 
-            <Link
-              to="/login"
-              aria-label="Mi cuenta"
-              className={`${iconButton} hidden xl:flex`}
-            >
-              <User size={20} strokeWidth={ICON_STROKE} />
-            </Link>
+            {usuario ? (
+              <button
+                type="button"
+                onClick={salir}
+                aria-label={`Cerrar sesión de ${usuario.nombre}`}
+                title={`Hola, ${usuario.nombre}. Cerrar sesión`}
+                className={`${iconButton} hidden xl:flex`}
+              >
+                <LogOut size={20} strokeWidth={ICON_STROKE} />
+              </button>
+            ) : (
+              <Link
+                to="/login"
+                aria-label="Mi cuenta"
+                className={`${iconButton} hidden xl:flex`}
+              >
+                <User size={20} strokeWidth={ICON_STROKE} />
+              </Link>
+            )}
 
             <Link
               to="/carrito"
@@ -317,12 +350,27 @@ export default function Navbar({ cartCount = 0 }) {
             })}
 
             <li>
-              <Link
-                to="/login"
-                className="block py-3 text-sm tracking-wide text-plum"
-              >
-                Mi cuenta
-              </Link>
+              {usuario ? (
+                <div className="flex items-center justify-between gap-4 border-b border-border py-3">
+                  <span className="truncate text-sm tracking-wide text-plum">
+                    Hola, {usuario.nombre}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={salir}
+                    className="shrink-0 text-xs uppercase tracking-wide text-dusty-rose hover:text-wine"
+                  >
+                    Salir
+                  </button>
+                </div>
+              ) : (
+                <Link
+                  to="/login"
+                  className="block py-3 text-sm tracking-wide text-plum"
+                >
+                  Mi cuenta
+                </Link>
+              )}
             </li>
           </ul>
         </nav>

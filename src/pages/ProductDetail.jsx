@@ -1,8 +1,19 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
-import { productos, formatoPrecio } from "../data/products";
+import { formatoPrecio } from "../api/catalogo";
+import { useProductos } from "../hooks/useProductos";
 
-const tallas = ["XS", "S", "M", "L", "XL"];
+const ORDEN_TALLAS = ["XS", "S", "M", "L", "XL"];
+
+const ordenarTallas = (tallas) =>
+  [...tallas].sort((a, b) => {
+    const ia = ORDEN_TALLAS.indexOf(a);
+    const ib = ORDEN_TALLAS.indexOf(b);
+    if (ia === -1 && ib === -1) return String(a).localeCompare(String(b));
+    if (ia === -1) return 1;
+    if (ib === -1) return -1;
+    return ia - ib;
+  });
 
 const beneficios = [
   {
@@ -29,14 +40,51 @@ const beneficios = [
 
 export default function ProductDetail() {
   const { id } = useParams();
+  const { productos, cargando, error, recargar } = useProductos();
   const [talla, setTalla] = useState("");
+  const [color, setColor] = useState("");
+  const [imagenActiva, setImagenActiva] = useState(0);
+  const [sinImagen, setSinImagen] = useState(false);
+  const [idAnterior, setIdAnterior] = useState(id);
+
+  // Al pasar de un producto a otro se reinician talla, color e imagen.
+  // (Ajustar el estado durante el render evita un render extra.)
+  if (idAnterior !== id) {
+    setIdAnterior(id);
+    setTalla("");
+    setColor("");
+    setImagenActiva(0);
+    setSinImagen(false);
+  }
 
   useEffect(() => {
-    setTalla("");
     window.scrollTo({ top: 0 });
   }, [id]);
 
-  const producto = productos.find((p) => p.id === id);
+  const producto = productos.find((p) => p.id === String(id));
+
+  if (cargando && productos.length === 0) {
+    return (
+      <main className="mx-auto max-w-6xl px-6 py-20 text-center text-sm text-mauve">
+        Cargando producto…
+      </main>
+    );
+  }
+
+  if (error && productos.length === 0) {
+    return (
+      <main className="mx-auto max-w-md px-6 py-20 text-center" role="alert">
+        <p className="text-sm text-wine">{error.message}</p>
+        <button
+          type="button"
+          onClick={recargar}
+          className="mt-5 border border-wine px-7 py-2 text-sm text-wine transition-colors hover:bg-wine hover:text-white"
+        >
+          Reintentar
+        </button>
+      </main>
+    );
+  }
 
   if (!producto) {
     return <Navigate to="/productos" replace />;
@@ -45,6 +93,48 @@ export default function ProductDetail() {
   const descuento = producto.precioAnterior
     ? Math.round((1 - producto.precio / producto.precioAnterior) * 100)
     : 0;
+
+  const imagenes = producto.imagenes ?? [];
+  const imagenPrincipal =
+    imagenes[imagenActiva]?.url || imagenes[0]?.url || producto.imagen;
+
+  const variantes = producto.variantes ?? [];
+
+  const coloresDisponibles = producto.colores?.length
+    ? producto.colores
+    : [...new Set(variantes.map((variante) => variante.color).filter(Boolean))];
+
+  const colorSeleccionado = color || coloresDisponibles[0] || "";
+
+  const tallasDisponibles = ordenarTallas([
+    ...new Set(
+      variantes.length > 0
+        ? variantes
+            .filter(
+              (variante) =>
+                !colorSeleccionado || variante.color === colorSeleccionado,
+            )
+            .map((variante) => variante.talla)
+            .filter(Boolean)
+        : producto.tallas?.length
+          ? producto.tallas
+          : ORDEN_TALLAS,
+    ),
+  ]);
+
+  const varianteSeleccionada = talla
+    ? variantes.find(
+        (variante) =>
+          variante.talla === talla &&
+          (!colorSeleccionado || variante.color === colorSeleccionado),
+      )
+    : null;
+
+  const stockSeleccionado = varianteSeleccionada
+    ? Number(varianteSeleccionada.stock) || 0
+    : producto.stock;
+
+  const agotado = talla ? stockSeleccionado <= 0 : producto.stock <= 0;
 
   const relacionados = productos
     .filter(
@@ -57,10 +147,19 @@ export default function ProductDetail() {
       <section className="mx-auto grid max-w-6xl gap-10 px-6 py-8 md:grid-cols-2 md:gap-14 md:py-12">
         <div className="md:sticky md:top-8 md:self-start">
           <div className="relative aspect-[3/4] overflow-hidden bg-silk">
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-dusty-rose">
-              <span className="text-5xl">♡</span>
-              <p className="text-sm text-mauve">Fotografía del producto</p>
-            </div>
+            {sinImagen ? (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-dusty-rose">
+                <span className="text-5xl">♡</span>
+                <p className="text-sm text-mauve">Fotografía del producto</p>
+              </div>
+            ) : (
+              <img
+                src={imagenPrincipal}
+                alt={producto.nombre}
+                onError={() => setSinImagen(true)}
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            )}
 
             {descuento > 0 && (
               <span className="absolute left-0 top-4 bg-dusty-rose px-3 py-1 text-xs font-medium text-white">
@@ -68,6 +167,35 @@ export default function ProductDetail() {
               </span>
             )}
           </div>
+
+          {imagenes.length > 1 && (
+            <div className="mt-3 grid grid-cols-4 gap-2">
+              {imagenes.map((imagen, indice) => (
+                <button
+                  key={imagen.id_imagen ?? imagen.url}
+                  type="button"
+                  aria-label={`Ver imagen ${indice + 1}`}
+                  aria-pressed={imagenActiva === indice}
+                  onClick={() => {
+                    setImagenActiva(indice);
+                    setSinImagen(false);
+                  }}
+                  className={`aspect-[3/4] overflow-hidden border transition-colors ${
+                    imagenActiva === indice
+                      ? "border-wine"
+                      : "border-border hover:border-mauve"
+                  }`}
+                >
+                  <img
+                    src={imagen.url}
+                    alt=""
+                    loading="lazy"
+                    className="h-full w-full object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="min-w-0 bg-white">
@@ -108,14 +236,60 @@ export default function ProductDetail() {
           </div>
 
           <div className="px-8 pb-6 pt-5">
-            <p className="text-sm text-mauve">
-              Color:{" "}
-              <span className="font-medium text-plum">{producto.color}</span>
+            {colorSeleccionado && (
+              <p className="text-sm text-mauve">
+                Color:{" "}
+                <span className="font-medium text-plum">
+                  {colorSeleccionado}
+                </span>
+              </p>
+            )}
+
+            {coloresDisponibles.length > 1 && (
+              <div
+                role="group"
+                aria-label="Seleccionar color"
+                className="mt-3 flex flex-wrap gap-2"
+              >
+                {coloresDisponibles.map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    aria-pressed={colorSeleccionado === item}
+                    onClick={() => {
+                      setColor(item);
+                      if (
+                        talla &&
+                        !variantes.some(
+                          (variante) =>
+                            variante.color === item &&
+                            variante.talla === talla,
+                        )
+                      ) {
+                        setTalla("");
+                      }
+                    }}
+                    className={`border px-3 py-1 text-xs transition-colors ${
+                      colorSeleccionado === item
+                        ? "border-wine bg-wine text-white"
+                        : "border-mauve text-plum hover:bg-silk"
+                    }`}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <p className="mt-2 text-xs text-mauve">
+              {agotado
+                ? "Agotado"
+                : `${stockSeleccionado} unidades disponibles`}
             </p>
 
             <div className="mt-4 flex flex-wrap items-center">
               <div role="group" aria-label="Seleccionar talla" className="flex">
-                {tallas.map((item, indice) => (
+                {tallasDisponibles.map((item, indice) => (
                   <button
                     key={item}
                     type="button"
@@ -146,10 +320,14 @@ export default function ProductDetail() {
           <div className="px-8 pb-6">
             <button
               type="button"
-              disabled={!talla}
+              disabled={!talla || agotado}
               className="block h-11 w-full bg-wine text-xs font-medium uppercase tracking-wide text-white transition-colors hover:bg-dusty-rose disabled:cursor-not-allowed disabled:bg-petal disabled:text-wine/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-dusty-rose"
             >
-              {talla ? "Agregar al carrito" : "Selecciona una talla"}
+              {agotado
+                ? "Agotado"
+                : talla
+                  ? "Agregar al carrito"
+                  : "Selecciona una talla"}
             </button>
           </div>
 
@@ -175,9 +353,12 @@ export default function ProductDetail() {
               Sobre el producto
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-mauve">
-              {producto.nombre} en color {producto.color.toLowerCase()}, de la
-              categoría {producto.categoriaNombre.toLowerCase()}. Confeccionado
-              en tela premium, suave y cómoda para el uso diario.
+              {producto.descripcion ||
+                `${producto.nombre}${
+                  colorSeleccionado
+                    ? ` en color ${colorSeleccionado.toLowerCase()}`
+                    : ""
+                }, de la categoría ${producto.categoriaNombre.toLowerCase()}. Confeccionado en tela premium, suave y cómoda para el uso diario.`}
             </p>
           </div>
         </div>
@@ -197,8 +378,13 @@ export default function ProductDetail() {
                     to={`/productos/${item.id}`}
                     className="group block border border-border bg-white"
                   >
-                    <div className="flex aspect-[3/4] items-center justify-center bg-silk text-3xl text-dusty-rose transition-colors group-hover:bg-petal">
-                      ♡
+                    <div className="aspect-[3/4] overflow-hidden bg-silk">
+                      <img
+                        src={item.imagen}
+                        alt={item.nombre}
+                        loading="lazy"
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
                     </div>
                     <div className="p-4">
                       <h3 className="font-heading text-xl text-plum">
