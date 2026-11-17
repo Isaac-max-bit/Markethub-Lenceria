@@ -1,10 +1,19 @@
+
 import { Routes, Route, Navigate } from "react-router-dom";
+
+// Componentes generales
 import ScrollToTop from "../components/ScrollToTop";
+
+// Autenticación
 import AuthLayout from "../pages/auth/AuthLayout";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
+
+// Layout de la tienda
 import MainLayout from "../layouts/MainLayout";
-import Home from "../pages/Home";
+
+// Páginas de la tienda
+import Home from "../pages/home";
 import Products from "../pages/Products";
 import ProductDetail from "../pages/ProductDetail";
 import Search from "../pages/Search";
@@ -13,18 +22,30 @@ import Shipping from "../pages/Shipping";
 import Returns from "../pages/Returns";
 import Faq from "../pages/Faq";
 
+// Administración
+import AdminLayout from "../admin/layouts/AdminLayout";
+import Dashboard from "../admin/pages/Dashboard";
+
 export default function AppRouter() {
   return (
     <>
       <ScrollToTop />
-      <Routes>
-        <Route path="/" element={<Navigate to="/home" replace />} />
 
+      <Routes>
+
+        {/* REDIRECCIÓN PRINCIPAL */}
+        <Route
+          path="/"
+          element={<Navigate to="/home" replace />}
+        />
+
+        {/* AUTENTICACIÓN */}
         <Route element={<AuthLayout />}>
           <Route path="/login" element={<Login />} />
           <Route path="/registro" element={<Register />} />
         </Route>
 
+        {/* TIENDA PÚBLICA */}
         <Route element={<MainLayout />}>
           <Route path="/home" element={<Home />} />
           <Route path="/productos" element={<Products />} />
@@ -36,6 +57,12 @@ export default function AppRouter() {
           <Route path="/devoluciones" element={<Returns />} />
           <Route path="/preguntas-frecuentes" element={<Faq />} />
         </Route>
+
+        {/* PANEL ADMINISTRATIVO */}
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<Dashboard />} />
+        </Route>
+
       </Routes>
     </>
   );
