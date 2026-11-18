@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { registrarUsuario } from "../../api/usuarios";
@@ -16,16 +17,26 @@ export default function Register() {
     const datos = new FormData(e.currentTarget);
 
     try {
-      const usuario = await registrarUsuario({
+      const resultado = await registrarUsuario({
         nombre: String(datos.get("nombre") || ""),
         email: String(datos.get("email") || ""),
         password: String(datos.get("password") || ""),
       });
 
-      guardarSesion(usuario, true);
+      const usuario = resultado?.usuario;
+      const token = resultado?.token;
+
+      if (!usuario || !token) {
+        throw new Error(
+          "El registro fue recibido, pero el servidor no devolvió una sesión válida. Inicia sesión para continuar."
+        );
+      }
+
+      guardarSesion(usuario, token, true);
+
       navigate("/home");
     } catch (fallo) {
-      setError(fallo.message);
+      setError(fallo.message || "No se pudo crear la cuenta.");
     } finally {
       setEnviando(false);
     }
@@ -103,6 +114,7 @@ export default function Register() {
           <button type="submit" className="button" disabled={enviando}>
             {enviando ? "Creando cuenta…" : "Crear cuenta"}
           </button>
+
           <Link to="/login" className="button button-outline">
             Ya tengo cuenta
           </Link>

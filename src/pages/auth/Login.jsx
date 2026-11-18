@@ -16,13 +16,25 @@ export default function Login() {
     const datos = new FormData(e.currentTarget);
 
     try {
-      const usuario = await iniciarSesion({
+      const resultado = await iniciarSesion({
         email: String(datos.get("email") || ""),
         password: String(datos.get("password") || ""),
       });
 
-      guardarSesion(usuario, datos.get("recordar") === "on");
-      navigate("/home");
+      //Guardar usuario y JWT correctamente 
+      guardarSesion(
+        resultado.usuario,
+        resultado.token,
+        datos.get("recordar") === "on"
+      );
+
+      // Redirigir según el rol 
+      if(resultado.usuario.rol === "admin") {
+        navigate("/admin");
+      } else {
+        navigate("/home");
+      }
+      
     } catch (fallo) {
       setError(fallo.message);
     } finally {
