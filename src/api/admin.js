@@ -1,50 +1,26 @@
-
 import { api } from "./client";
 
-// ====================================
-// PRODUCTOS
-// ====================================
+// ============ PRODUCTOS ============
+export const obtenerProductosAdmin = (opciones) => api("/productos", opciones);
 
-// Obtener todos los productos
-export const obtenerProductosAdmin = () =>
-  api("/productos");
-
-// Crear producto
 export const crearProducto = (datos) =>
-  api("/productos", {
-    method: "POST",
-    body: datos,
-  });
+  api("/productos", { method: "POST", body: datos });
 
-// Actualizar producto
 export const actualizarProducto = (id, datos) =>
-  api(`/productos/${encodeURIComponent(id)}`, {
-    method: "PATCH",
-    body: datos,
-  });
+  api(`/productos/${encodeURIComponent(id)}`, { method: "PATCH", body: datos });
 
-// Eliminar producto
 export const eliminarProducto = (id) =>
-  api(`/productos/${encodeURIComponent(id)}`, {
-    method: "DELETE",
-  });
+  api(`/productos/${encodeURIComponent(id)}`, { method: "DELETE" });
 
-// ====================================
-// CLIENTES
-// ====================================
+// ============ CLIENTES ============
+export const obtenerClientes = (opciones) => api("/usuarios", opciones);
 
-// Obtener todos los usuarios
-export const obtenerClientes = () =>
-  api("/usuarios");
+export const buscarClientes = (nombre = "") => {
+  const termino = nombre.trim();
+  return termino
+    ? api(`/usuarios/buscar?nombre=${encodeURIComponent(termino)}`)
+    : obtenerClientes();
+};
 
-// Buscar usuarios
-export const buscarClientes = (nombre) =>
-  api(`/usuarios/buscar?nombre=${encodeURIComponent(nombre)}`);
-
-// ====================================
-// PERFIL
-// ====================================
-
-// Obtener perfil del administrador
-export const obtenerPerfilAdmin = () =>
-  api("/usuarios/perfil");
+// ============ PERFIL ============
+export const obtenerPerfilAdmin = (opciones) => api("/usuarios/perfil", opciones);

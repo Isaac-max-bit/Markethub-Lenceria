@@ -1,4 +1,3 @@
-
 import { Routes, Route, Navigate } from "react-router-dom";
 
 // Componentes generales
@@ -23,8 +22,10 @@ import Returns from "../pages/Returns";
 import Faq from "../pages/Faq";
 
 // Administración
+import RutaAdmin from "../admin/components/RutaAdmin";
 import AdminLayout from "../admin/layouts/AdminLayout";
 import Dashboard from "../admin/pages/Dashboard";
+import Proximamente from "../admin/pages/Proximamente";
 
 export default function AppRouter() {
   return (
@@ -58,9 +59,12 @@ export default function AppRouter() {
           <Route path="/preguntas-frecuentes" element={<Faq />} />
         </Route>
 
-        {/* PANEL ADMINISTRATIVO */}
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<Dashboard />} />
+        {/* PANEL ADMINISTRATIVO (solo rol admin) */}
+        <Route element={<RutaAdmin />}>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="*" element={<Proximamente />} />
+          </Route>
         </Route>
 
       </Routes>

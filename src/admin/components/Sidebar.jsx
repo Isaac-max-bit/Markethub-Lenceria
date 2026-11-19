@@ -1,51 +1,53 @@
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard,
+import {
+  LayoutDashboard,
   Package,
   Tags,
   Users,
   ShoppingBag,
   TicketPercent,
   Settings,
-  LogOut,
-  Store,} from "lucide-react";
+  ArrowLeft,
+  Store,
+} from "lucide-react";
 
-const menuItems = [ 
-    {
-        title: "Dashboard",
-        path: "/admin",
-        icon: LayoutDashboard,
-        end: true,
-    }, 
-    {
-        title: "Productos",
-        path: "/admin/productos",
-        icon: Package,
-    },
-    {
-        title: "Categorías",
-        path: "/admin/categorias",
-        icon: Tags,
-    },
-    { 
-        title: "Clientes",
-        path: "/admin/clientes",
-        icon: Users,
-    },
-    {
-        title: "Pedidos",
-        path: "/admin/pedidos",
-        icon: ShoppingBag,
-    },
-    {
-        title: "Descuentos",
-        path: "/admin/descuentos",
-        icon: TicketPercent,
-    },
+const menuItems = [
+  {
+    title: "Dashboard",
+    path: "/admin",
+    icon: LayoutDashboard,
+    end: true,
+  },
+  {
+    title: "Productos",
+    path: "/admin/productos",
+    icon: Package,
+  },
+  {
+    title: "Categorías",
+    path: "/admin/categorias",
+    icon: Tags,
+  },
+  {
+    title: "Clientes",
+    path: "/admin/clientes",
+    icon: Users,
+  },
+  {
+    title: "Pedidos",
+    path: "/admin/pedidos",
+    icon: ShoppingBag,
+  },
+  {
+    title: "Descuentos",
+    path: "/admin/descuentos",
+    icon: TicketPercent,
+  },
 ];
 
 export default function Sidebar() {
-    return (
-        <aside className="flex min-h-screen w-64 shrink-0 flex-col bg-[#3e1a26] text-white">
+  return (
+    <aside className="flex min-h-screen w-64 shrink-0 flex-col bg-[#3e1a26] text-white">
 
       {/* LOGO */}
       <div className="flex h-20 items-center gap-3 border-b border-white/10 px-6">
@@ -106,11 +108,11 @@ export default function Sidebar() {
           to="/home"
           className="flex items-center gap-3 px-4 py-3 text-sm text-white/65 transition hover:text-white"
         >
-          <LogOut size={19} />
+          <ArrowLeft size={19} />
           Volver a la tienda
         </NavLink>
 
       </div>
     </aside>
-    );
+  );
 }
