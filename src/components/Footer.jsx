@@ -87,9 +87,9 @@ export default function Footer() {
         <div className="col-span-2 flex flex-col items-start sm:col-span-1">
           <Link
             to="/home"
-            className="font-heading text-[26px] font-medium tracking-[0.2em] text-silk transition-colors hover:text-champagne sm:text-[30px]"
+            className="font-heading text-[26px] font-medium tracking-[0.16em] text-silk transition-colors hover:text-champagne sm:text-[30px]"
           >
-            LENCERÍA LR
+            Lujo Rosado
           </Link>
 
           <p className="mt-3.5 max-w-[230px] font-heading text-[17px] italic leading-normal text-petal sm:text-[19px]">
@@ -191,7 +191,7 @@ export default function Footer() {
 
       <div className="mx-auto flex max-w-[1440px] flex-col items-start gap-[18px] border-t border-silk/20 px-6 py-6 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-5 sm:px-[6%] lg:px-[6.25%]">
         <p className="text-[11px] text-petal">
-          © {new Date().getFullYear()} Lencería LR. Todos los derechos
+          © {new Date().getFullYear()} Lujo Rosado. Todos los derechos
           reservados.
         </p>
 

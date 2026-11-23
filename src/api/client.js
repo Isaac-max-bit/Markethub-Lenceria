@@ -1,13 +1,11 @@
 // Cliente HTTP centralizado para hablar con el backend de Express.
 // La URL se configura en el archivo .env del front:
 //   VITE_API_URL=http://localhost:3000
-
 import { obtenerToken } from "./sesion";
 
-// URL del backend 
 const API_URL = (
   import.meta.env.VITE_API_URL || "http://localhost:3000"
-).replace(/\/$/, ""); // Elimina la barra final si existe
+).replace(/\/+$/, "");
 
 // Clase para manejar errores HTTP
 export class APIError extends Error {
@@ -19,9 +17,7 @@ export class APIError extends Error {
   }
 }
 
-//Convertir respuesta a JSON
-
-// Convertir respuesta a JSON
+// Convertir la respuesta a JSON (o texto si no es JSON).
 const parsear = (texto) => {
   if (!texto) return null;
 
@@ -35,29 +31,20 @@ const parsear = (texto) => {
 // Cliente HTTP principal
 export async function api(
   ruta,
-  {
-    method = "GET",
-    body,
-    signal,
-    headers = {},
-    auth = true,
-  } = {}
+  { method = "GET", body, signal, headers = {}, auth = true } = {},
 ) {
   const token = auth ? obtenerToken() : null;
 
   const esFormData =
-    typeof FormData !== "undefined" &&
-    body instanceof FormData;
+    typeof FormData !== "undefined" && body instanceof FormData;
 
-  const cabeceras = {
-    ...headers,
-  };
+  const cabeceras = { ...headers };
 
   if (body !== undefined && !esFormData) {
     cabeceras["Content-Type"] = "application/json";
   }
 
-  // Enviar JWT al backend
+  // Enviar el JWT al backend en las rutas privadas.
   if (token) {
     cabeceras.Authorization = `Bearer ${token}`;
   }
@@ -76,7 +63,6 @@ export async function api(
             : JSON.stringify(body),
       signal,
     });
-
   } catch (error) {
     if (error.name === "AbortError") {
       throw error;
@@ -85,7 +71,7 @@ export async function api(
     throw new APIError(
       "No se pudo conectar con el servidor. Verifica que el backend esté encendido.",
       0,
-      null
+      null,
     );
   }
 
@@ -93,16 +79,10 @@ export async function api(
 
   if (!respuesta.ok) {
     const mensaje =
-      (datos &&
-        typeof datos === "object" &&
-        datos.error) ||
+      (datos && typeof datos === "object" && datos.error) ||
       `Error ${respuesta.status} al llamar a la API`;
 
-    throw new APIError(
-      mensaje,
-      respuesta.status,
-      datos
-    );
+    throw new APIError(mensaje, respuesta.status, datos);
   }
 
   return datos;

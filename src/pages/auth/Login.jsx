@@ -1,12 +1,16 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 import { iniciarSesion } from "../../api/usuarios";
 import { guardarSesion } from "../../api/sesion";
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const destino = location.state?.desde || "/home";
   const [error, setError] = useState("");
   const [enviando, setEnviando] = useState(false);
+  const [verPassword, setVerPassword] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -16,25 +20,18 @@ export default function Login() {
     const datos = new FormData(e.currentTarget);
 
     try {
-      const resultado = await iniciarSesion({
+      const { usuario, token } = await iniciarSesion({
         email: String(datos.get("email") || ""),
         password: String(datos.get("password") || ""),
       });
 
-      //Guardar usuario y JWT correctamente 
-      guardarSesion(
-        resultado.usuario,
-        resultado.token,
-        datos.get("recordar") === "on"
-      );
+      guardarSesion(usuario, token, datos.get("recordar") === "on");
 
-      // Redirigir según el rol 
-      if(resultado.usuario.rol === "admin") {
-        navigate("/admin");
-      } else {
-        navigate("/home");
-      }
-      
+      // Los administradores entran directo al panel; las clientas siguen
+      // el destino que tenían (por ejemplo, volver al checkout).
+      const esAdmin = String(usuario?.rol || "").toLowerCase() === "admin";
+
+      navigate(esAdmin ? "/admin" : destino, { replace: true });
     } catch (fallo) {
       setError(fallo.message);
     } finally {
@@ -75,12 +72,27 @@ export default function Login() {
               <i className="fa-solid fa-lock"></i>
               <input
                 id="login-password"
-                type="password"
+                type={verPassword ? "text" : "password"}
                 name="password"
                 placeholder="••••••••"
                 autoComplete="current-password"
                 required
               />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setVerPassword((valor) => !valor)}
+                aria-label={
+                  verPassword ? "Ocultar contraseña" : "Mostrar contraseña"
+                }
+                aria-pressed={verPassword}
+              >
+                {verPassword ? (
+                  <EyeOff size={18} strokeWidth={1.6} aria-hidden="true" />
+                ) : (
+                  <Eye size={18} strokeWidth={1.6} aria-hidden="true" />
+                )}
+              </button>
             </div>
           </div>
 
@@ -97,7 +109,7 @@ export default function Login() {
 
           <p className="form-hint">
             ¿No tienes cuenta?{" "}
-            <Link to="/registro" className="form-link">
+            <Link to="/registro" state={location.state} className="form-link">
               Regístrate aquí
             </Link>
             .
@@ -108,7 +120,7 @@ export default function Login() {
           <button type="submit" className="button" disabled={enviando}>
             {enviando ? "Ingresando…" : "Iniciar sesión"}
           </button>
-          <Link to="/registro" className="button button-outline">
+          <Link to="/registro" state={location.state} className="button button-outline">
             Crear cuenta nueva
           </Link>
         </div>

@@ -12,7 +12,9 @@ export default function RutaAdmin() {
     return <Navigate to="/login" replace state={{ desde: ubicacion.pathname }} />;
   }
 
-  if (usuario.rol !== "admin") {
+  // En la base de datos el rol se guarda como "ADMIN"; se compara sin
+  // distinguir mayúsculas para que el panel funcione con ambos formatos.
+  if (String(usuario.rol || "").toLowerCase() !== "admin") {
     return <Navigate to="/home" replace />;
   }
 

@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
-import { formatoPrecio } from "../api/catalogo";
+import { Check, Minus, Plus } from "lucide-react";
+import { COLOR_HEX, formatoPrecio } from "../api/catalogo";
+import { useCarrito } from "../context/CarritoContext";
 import { useProductos } from "../hooks/useProductos";
 
 const ORDEN_TALLAS = ["XS", "S", "M", "L", "XL"];
@@ -14,6 +16,20 @@ const ordenarTallas = (tallas) =>
     if (ib === -1) return -1;
     return ia - ib;
   });
+
+// Color del check dentro de cada muestra según qué tan clara sea.
+const colorContraste = (hex) => {
+  const limpio = String(hex).replace("#", "");
+
+  if (limpio.length !== 6) return "#ffffff";
+
+  const r = parseInt(limpio.slice(0, 2), 16);
+  const g = parseInt(limpio.slice(2, 4), 16);
+  const b = parseInt(limpio.slice(4, 6), 16);
+  const luz = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+  return luz > 0.62 ? "#3e1a26" : "#ffffff";
+};
 
 const beneficios = [
   {
@@ -40,11 +56,14 @@ const beneficios = [
 
 export default function ProductDetail() {
   const { id } = useParams();
+  const { agregar, abrirCarrito } = useCarrito();
   const { productos, cargando, error, recargar } = useProductos();
   const [talla, setTalla] = useState("");
   const [color, setColor] = useState("");
-  const [imagenActiva, setImagenActiva] = useState(0);
-  const [sinImagen, setSinImagen] = useState(false);
+  const [cantidad, setCantidad] = useState(1);
+  const [agregando, setAgregando] = useState(false);
+  const [aviso, setAviso] = useState(null);
+  const [urlsRotas, setUrlsRotas] = useState([]);
   const [idAnterior, setIdAnterior] = useState(id);
 
   // Al pasar de un producto a otro se reinician talla, color e imagen.
@@ -53,8 +72,10 @@ export default function ProductDetail() {
     setIdAnterior(id);
     setTalla("");
     setColor("");
-    setImagenActiva(0);
-    setSinImagen(false);
+    setCantidad(1);
+    setAgregando(false);
+    setAviso(null);
+    setUrlsRotas([]);
   }
 
   useEffect(() => {
@@ -94,9 +115,17 @@ export default function ProductDetail() {
     ? Math.round((1 - producto.precio / producto.precioAnterior) * 100)
     : 0;
 
-  const imagenes = producto.imagenes ?? [];
-  const imagenPrincipal =
-    imagenes[imagenActiva]?.url || imagenes[0]?.url || producto.imagen;
+  const galeria = (producto.imagenes ?? [])
+    .map((imagen) => imagen.url)
+    .filter(Boolean);
+
+  const imagenPrincipal = producto.imagen || galeria[0];
+
+  // Se muestran dos fotos: la principal y la siguiente distinta de la galería.
+  const imagenesVisibles = [imagenPrincipal, ...galeria]
+    .filter((url, indice, lista) => url && lista.indexOf(url) === indice)
+    .filter((url) => !urlsRotas.includes(url))
+    .slice(0, 2);
 
   const variantes = producto.variantes ?? [];
 
@@ -136,6 +165,41 @@ export default function ProductDetail() {
 
   const agotado = talla ? stockSeleccionado <= 0 : producto.stock <= 0;
 
+  const puedeAgregar = Boolean(varianteSeleccionada) && !agotado;
+  const cantidadMaxima = Math.max(
+    1,
+    varianteSeleccionada ? stockSeleccionado : producto.stock,
+  );
+
+  const agregarAlCarrito = async () => {
+    if (!puedeAgregar) return;
+
+    setAgregando(true);
+    setAviso(null);
+
+    try {
+      await agregar({
+        variante_id: varianteSeleccionada.id_variante,
+        cantidad,
+        talla: varianteSeleccionada.talla,
+        color: varianteSeleccionada.color,
+        stock: Number(varianteSeleccionada.stock) || 0,
+        producto_id: producto.id,
+        nombre: producto.nombre,
+        precio: producto.precio,
+        precio_anterior: producto.precioAnterior ?? null,
+        imagen: imagenPrincipal ?? producto.imagen ?? null,
+      });
+
+      setAviso({ tipo: "ok", texto: "Producto agregado a tu carrito." });
+      abrirCarrito();
+    } catch (fallo) {
+      setAviso({ tipo: "error", texto: fallo.message });
+    } finally {
+      setAgregando(false);
+    }
+  };
+
   const relacionados = productos
     .filter(
       (p) => p.categoriaId === producto.categoriaId && p.id !== producto.id,
@@ -144,21 +208,53 @@ export default function ProductDetail() {
 
   return (
     <main className="bg-white font-body text-plum">
-      <section className="mx-auto grid max-w-6xl gap-10 px-6 py-8 md:grid-cols-2 md:gap-14 md:py-12">
-        <div className="md:sticky md:top-8 md:self-start">
-          <div className="relative aspect-[3/4] overflow-hidden bg-silk">
-            {sinImagen ? (
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-dusty-rose">
+      <div className="mx-auto max-w-6xl px-4 pt-6">
+        <nav aria-label="Ruta de navegación" className="text-xs text-mauve">
+          <Link to="/productos" className="hover:text-wine">
+            Productos
+          </Link>
+          <span className="mx-2">/</span>
+          <Link
+            to={`/productos?categoria=${producto.categoriaId}`}
+            className="hover:text-wine"
+          >
+            {producto.categoriaNombre}
+          </Link>
+        </nav>
+      </div>
+
+      <section className="mx-auto grid max-w-6xl gap-10 px-4 pb-8 pt-4 lg:grid-cols-[1.75fr_1fr] lg:gap-12 lg:pb-12 lg:pt-6">
+        <div className="lg:sticky lg:top-8 lg:self-start">
+          <div className="relative">
+            {imagenesVisibles.length === 0 ? (
+              <div className="flex aspect-[3/4] w-full flex-col items-center justify-center gap-2 bg-silk text-dusty-rose">
                 <span className="text-5xl">♡</span>
                 <p className="text-sm text-mauve">Fotografía del producto</p>
               </div>
             ) : (
-              <img
-                src={imagenPrincipal}
-                alt={producto.nombre}
-                onError={() => setSinImagen(true)}
-                className="absolute inset-0 h-full w-full object-cover"
-              />
+              <div
+                className={`grid gap-2 ${
+                  imagenesVisibles.length > 1 ? "grid-cols-2" : "grid-cols-1"
+                }`}
+              >
+                {imagenesVisibles.map((url, indice) => (
+                  <div
+                    key={url}
+                    className="relative aspect-[3/4] overflow-hidden bg-silk"
+                  >
+                    <img
+                      src={url}
+                      alt={`${producto.nombre} ${indice + 1}`}
+                      onError={() =>
+                        setUrlsRotas((prev) =>
+                          prev.includes(url) ? prev : [...prev, url],
+                        )
+                      }
+                      className="absolute inset-0 h-full w-full object-cover"
+                    />
+                  </div>
+                ))}
+              </div>
             )}
 
             {descuento > 0 && (
@@ -167,59 +263,17 @@ export default function ProductDetail() {
               </span>
             )}
           </div>
-
-          {imagenes.length > 1 && (
-            <div className="mt-3 grid grid-cols-4 gap-2">
-              {imagenes.map((imagen, indice) => (
-                <button
-                  key={imagen.id_imagen ?? imagen.url}
-                  type="button"
-                  aria-label={`Ver imagen ${indice + 1}`}
-                  aria-pressed={imagenActiva === indice}
-                  onClick={() => {
-                    setImagenActiva(indice);
-                    setSinImagen(false);
-                  }}
-                  className={`aspect-[3/4] overflow-hidden border transition-colors ${
-                    imagenActiva === indice
-                      ? "border-wine"
-                      : "border-border hover:border-mauve"
-                  }`}
-                >
-                  <img
-                    src={imagen.url}
-                    alt=""
-                    loading="lazy"
-                    className="h-full w-full object-cover"
-                  />
-                </button>
-              ))}
-            </div>
-          )}
         </div>
 
         <div className="min-w-0 bg-white">
-          <div className="bg-wine px-8 py-4 text-xs text-white">
+          <div className="bg-wine px-4 py-3 text-xs text-white">
             <span className="font-medium tracking-wide">LUXURY COLLECTION</span>
             <span className="mx-2">|</span>
             <span className="text-petal">Suave al tacto, hecha para ti</span>
           </div>
 
-          <div className="border-b border-border px-8 py-6">
-            <nav aria-label="Ruta de navegación" className="text-xs text-mauve">
-              <Link to="/productos" className="hover:text-wine">
-                Productos
-              </Link>
-              <span className="mx-2">/</span>
-              <Link
-                to={`/productos?categoria=${producto.categoriaId}`}
-                className="hover:text-wine"
-              >
-                {producto.categoriaNombre}
-              </Link>
-            </nav>
-
-            <h1 className="mt-3 font-heading text-4xl text-wine">
+          <div className="border-b border-border px-4 pb-5 pt-4">
+            <h1 className="font-heading text-3xl text-wine">
               {producto.nombre}
             </h1>
 
@@ -235,103 +289,215 @@ export default function ProductDetail() {
             </p>
           </div>
 
-          <div className="px-8 pb-6 pt-5">
-            {colorSeleccionado && (
-              <p className="text-sm text-mauve">
-                Color:{" "}
-                <span className="font-medium text-plum">
-                  {colorSeleccionado}
-                </span>
-              </p>
-            )}
+          <div className="px-4 pb-5 pt-4">
+            {coloresDisponibles.length > 0 && (
+              <div>
+                <p className="text-sm text-mauve">
+                  Color:{" "}
+                  <span className="font-medium text-plum">
+                    {colorSeleccionado}
+                  </span>
+                </p>
 
-            {coloresDisponibles.length > 1 && (
-              <div
-                role="group"
-                aria-label="Seleccionar color"
-                className="mt-3 flex flex-wrap gap-2"
-              >
-                {coloresDisponibles.map((item) => (
-                  <button
-                    key={item}
-                    type="button"
-                    aria-pressed={colorSeleccionado === item}
-                    onClick={() => {
-                      setColor(item);
-                      if (
-                        talla &&
-                        !variantes.some(
-                          (variante) =>
-                            variante.color === item &&
-                            variante.talla === talla,
-                        )
-                      ) {
-                        setTalla("");
-                      }
-                    }}
-                    className={`border px-3 py-1 text-xs transition-colors ${
-                      colorSeleccionado === item
-                        ? "border-wine bg-wine text-white"
-                        : "border-mauve text-plum hover:bg-silk"
-                    }`}
-                  >
-                    {item}
-                  </button>
-                ))}
+                <div
+                  role="group"
+                  aria-label="Seleccionar color"
+                  className="mt-3 flex flex-wrap items-center gap-3"
+                >
+                  {coloresDisponibles.map((item) => {
+                    const activo = colorSeleccionado === item;
+                    const fondo = COLOR_HEX[item] ?? "#d8c3a5";
+
+                    return (
+                      <button
+                        key={item}
+                        type="button"
+                        aria-pressed={activo}
+                        aria-label={`Color ${item}`}
+                        title={item}
+                        onClick={() => {
+                          setColor(item);
+                          setCantidad(1);
+                          setAviso(null);
+
+                          if (
+                            talla &&
+                            !variantes.some(
+                              (variante) =>
+                                variante.color === item &&
+                                variante.talla === talla &&
+                                (Number(variante.stock) || 0) > 0,
+                            )
+                          ) {
+                            setTalla("");
+                          }
+                        }}
+                        style={{
+                          backgroundColor: fondo,
+                          borderRadius: "9999px",
+                        }}
+                        className={`flex h-10 w-10 items-center justify-center transition-transform hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-dusty-rose ${
+                          activo
+                            ? "ring-2 ring-plum ring-offset-2 ring-offset-white"
+                            : "ring-1 ring-border hover:ring-mauve"
+                        }`}
+                      >
+                        {activo && (
+                          <Check
+                            size={16}
+                            strokeWidth={2.5}
+                            style={{ color: colorContraste(fondo) }}
+                            aria-hidden="true"
+                          />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             )}
 
-            <p className="mt-2 text-xs text-mauve">
-              {agotado
-                ? "Agotado"
-                : `${stockSeleccionado} unidades disponibles`}
-            </p>
-
-            <div className="mt-4 flex flex-wrap items-center">
-              <div role="group" aria-label="Seleccionar talla" className="flex">
-                {tallasDisponibles.map((item, indice) => (
-                  <button
-                    key={item}
-                    type="button"
-                    aria-pressed={talla === item}
-                    onClick={() => setTalla(item)}
-                    className={`h-11 w-12 border text-sm transition-colors focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-dusty-rose ${
-                      indice > 0 ? "-ml-px" : ""
-                    } ${
-                      talla === item
-                        ? "border-wine bg-wine text-white"
-                        : "border-mauve text-plum hover:bg-silk"
-                    }`}
-                  >
-                    {item}
-                  </button>
-                ))}
-              </div>
-
+            <div className="mt-4 flex items-center justify-between gap-4">
+              <p className="text-sm text-mauve">Talla:</p>
               <Link
                 to="/guia-de-tallas"
-                className="ml-4 text-xs font-medium uppercase tracking-wide text-dusty-rose underline underline-offset-4 hover:text-wine"
+                className="text-xs font-medium uppercase tracking-wide text-dusty-rose underline underline-offset-4 hover:text-wine"
               >
-                Guía de medidas
+                Guía de Tallas
               </Link>
             </div>
-          </div>
 
-          <div className="px-8 pb-6">
-            <button
-              type="button"
-              disabled={!talla || agotado}
-              className="block h-11 w-full bg-wine text-xs font-medium uppercase tracking-wide text-white transition-colors hover:bg-dusty-rose disabled:cursor-not-allowed disabled:bg-petal disabled:text-wine/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-dusty-rose"
+            <div
+              role="group"
+              aria-label="Seleccionar talla"
+              className="mt-2 flex flex-wrap gap-2"
             >
-              {agotado
-                ? "Agotado"
-                : talla
-                  ? "Agregar al carrito"
-                  : "Selecciona una talla"}
-            </button>
+              {tallasDisponibles.map((item) => {
+                const variante = variantes.find(
+                  (opcion) =>
+                    opcion.talla === item &&
+                    (!colorSeleccionado || opcion.color === colorSeleccionado),
+                );
+                const sinStock =
+                  !variante || (Number(variante.stock) || 0) <= 0;
+                const activa = talla === item;
+
+                return (
+                  <button
+                    key={item}
+                    type="button"
+                    aria-pressed={activa}
+                    aria-label={
+                      sinStock ? `Talla ${item} agotada` : `Talla ${item}`
+                    }
+                    disabled={sinStock}
+                    onClick={() => {
+                      setTalla(item);
+                      setCantidad(1);
+                      setAviso(null);
+                    }}
+                    style={{ borderRadius: "0.5rem" }}
+                    className={`h-11 min-w-14 border px-3 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-dusty-rose ${
+                      sinStock
+                        ? "cursor-not-allowed border-border text-mauve/40 line-through"
+                        : activa
+                          ? "border-wine bg-wine text-white"
+                          : "border-border text-plum hover:border-wine"
+                    }`}
+                  >
+                    {item}
+                  </button>
+                );
+              })}
+            </div>
+
+            <p className="mt-3 text-xs text-mauve">
+              {talla
+                ? agotado
+                  ? "Esa talla está agotada"
+                  : `${stockSeleccionado} unidades disponibles`
+                : `${producto.stock} unidades disponibles en total`}
+            </p>
           </div>
 
-          <ul className="grid gap-5 border-y border-border px-8 py-6">
+          <div className="px-4 pb-5">
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <div
+                role="group"
+                aria-label="Cantidad"
+                className="flex h-11 w-32 shrink-0 items-center justify-between rounded-full border border-border px-2"
+              >
+                <button
+                  type="button"
+                  onClick={() => setCantidad((valor) => Math.max(1, valor - 1))}
+                  disabled={cantidad <= 1}
+                  aria-label="Quitar una unidad"
+                  style={{ borderRadius: "9999px" }}
+                  className="flex h-8 w-8 items-center justify-center text-mauve transition-colors hover:bg-silk hover:text-wine disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <Minus size={14} strokeWidth={1.5} />
+                </button>
+
+                <span className="text-sm text-plum">{cantidad}</span>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setCantidad((valor) => Math.min(cantidadMaxima, valor + 1))
+                  }
+                  disabled={cantidad >= cantidadMaxima}
+                  aria-label="Agregar una unidad"
+                  style={{ borderRadius: "9999px" }}
+                  className="flex h-8 w-8 items-center justify-center text-mauve transition-colors hover:bg-silk hover:text-wine disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <Plus size={14} strokeWidth={1.5} />
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={agregarAlCarrito}
+                disabled={!puedeAgregar || agregando}
+                style={{ borderRadius: "9999px" }}
+                className="h-11 flex-1 bg-wine px-6 text-xs font-medium uppercase tracking-wide text-white transition-colors hover:bg-dusty-rose disabled:cursor-not-allowed disabled:bg-petal disabled:text-wine/60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-dusty-rose"
+              >
+                {agregando
+                  ? "Agregando…"
+                  : agotado
+                    ? "Agotado"
+                    : !varianteSeleccionada
+                      ? talla
+                        ? "No disponible"
+                        : "Selecciona una talla"
+                      : "Agregar a tu carrito"}
+              </button>
+            </div>
+
+            {aviso && (
+              <p
+                role={aviso.tipo === "error" ? "alert" : "status"}
+                className={`mt-3 text-xs ${
+                  aviso.tipo === "error" ? "text-wine" : "text-mauve"
+                }`}
+              >
+                {aviso.texto}
+                {aviso.tipo === "ok" && (
+                  <>
+                    {" "}
+                    <button
+                      type="button"
+                      onClick={abrirCarrito}
+                      className="font-medium text-dusty-rose underline underline-offset-4 hover:text-wine"
+                    >
+                      Ver carrito
+                    </button>
+                  </>
+                )}
+              </p>
+            )}
+          </div>
+
+          <ul className="grid gap-4 border-y border-border px-4 py-5">
             {beneficios.map((beneficio) => (
               <li key={beneficio.titulo} className="flex items-start gap-4">
                 <i
@@ -348,7 +514,7 @@ export default function ProductDetail() {
             ))}
           </ul>
 
-          <div className="px-8 py-6">
+          <div className="px-4 py-5">
             <h2 className="font-heading text-2xl text-wine">
               Sobre el producto
             </h2>

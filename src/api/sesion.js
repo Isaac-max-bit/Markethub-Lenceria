@@ -29,7 +29,19 @@ export function obtenerSesion() {
   for (const almacen of [localStorage, sessionStorage]) {
     try {
       const guardado = almacen.getItem(CLAVE_USUARIO);
-      if (guardado) return JSON.parse(guardado);
+      if (!guardado) continue;
+
+      const datos = JSON.parse(guardado);
+
+      // Compatibilidad con sesiones antiguas que guardaban la respuesta
+      // completa del login: { usuario, token }. Se migran al formato actual.
+      if (datos && typeof datos === "object" && datos.usuario) {
+        if (datos.token) almacen.setItem(CLAVE_TOKEN, datos.token);
+        almacen.setItem(CLAVE_USUARIO, JSON.stringify(datos.usuario));
+        return datos.usuario;
+      }
+
+      return datos;
     } catch {
       // JSON dañado: se ignora y se sigue con el otro almacén.
     }

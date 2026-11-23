@@ -35,12 +35,15 @@ const COLORES = [
   { nombre: "Blanco", claves: ["blanco", "blanca"] },
   { nombre: "Beige", claves: ["beige", "nude", "arena"] },
   { nombre: "Rosado", claves: ["rosado", "rosada", "rosa", "palo de rosa"] },
+  { nombre: "Fucsia", claves: ["fucsia", "magenta"] },
   { nombre: "Vino", claves: ["vino", "vinotinto", "burdeos"] },
   { nombre: "Lila", claves: ["lila", "lavanda"] },
   { nombre: "Morado", claves: ["morado", "morada", "purpura"] },
   { nombre: "Rojo", claves: ["rojo", "roja"] },
   { nombre: "Azul", claves: ["azul", "azulino"] },
   { nombre: "Verde", claves: ["verde"] },
+  { nombre: "Menta", claves: ["menta"] },
+  { nombre: "Jade", claves: ["jade", "esmeralda", "turquesa"] },
   { nombre: "Champán", claves: ["champan", "champagne", "dorado"] },
   { nombre: "Gris", claves: ["gris"] },
   { nombre: "Café", claves: ["cafe", "marron", "marrón"] },
@@ -51,6 +54,26 @@ export const formatoPrecio = new Intl.NumberFormat("es-CO", {
   currency: "COP",
   maximumFractionDigits: 0,
 });
+
+// Color aproximado de cada nombre, para las muestras de color.
+export const COLOR_HEX = {
+  Negro: "#1c1a1b",
+  Blanco: "#f7f3ee",
+  Beige: "#d8c3a5",
+  Rosado: "#d98a9b",
+  Fucsia: "#c2185b",
+  Vino: "#5b2333",
+  Lila: "#b9a2cf",
+  Morado: "#7a4b8a",
+  Rojo: "#b0303a",
+  Azul: "#4a6fa5",
+  Verde: "#5b8a6a",
+  Menta: "#a8d5b5",
+  Jade: "#1f7a6a",
+  Champán: "#c6a27c",
+  Gris: "#9b9b9b",
+  Café: "#7a5a44",
+};
 
 export const normalizarTexto = (valor = "") =>
   String(valor)
@@ -166,6 +189,7 @@ export const aTarjeta = (producto) => ({
   price: producto.precio,
   oldPrice: producto.precioAnterior,
   image: producto.imagen,
+  images: (producto.imagenes ?? []).map((imagen) => imagen.url).filter(Boolean),
 });
 
 // ============================================================

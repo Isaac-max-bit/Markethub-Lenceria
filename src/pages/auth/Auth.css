@@ -111,6 +111,32 @@
   box-shadow: 0 0 0 3px rgba(243, 196, 192, 0.55);
 }
 
+.password-toggle {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: none;
+  background: transparent;
+  color: var(--mauve);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.password-toggle:hover {
+  color: var(--wine);
+}
+
+.password-toggle:focus-visible {
+  outline: 2px solid var(--champagne);
+  outline-offset: 1px;
+}
+
 .password-title {
   display: flex;
   align-items: center;

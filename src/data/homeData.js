@@ -1,5 +1,10 @@
-import hero1 from "../assets/hero1.jpg";
-import hero2 from "../assets/hero2.jpg";
+import hero1 from "../assets/hero1.webp";
+import bannerEditorial from "../assets/banner-editorial.webp";
+import categoriaConjunto from "../assets/categoria-conjunto.jpg";
+import categoriaBrasier from "../assets/categoria-brasier.jpg";
+import categoriaPantie from "../assets/categoria-pantie.jpg";
+import categoriaBody from "../assets/categoria-body.jpg";
+import categoriaPijama from "../assets/categoria-pijama.jpg";
 import { productos } from "./products";
 
 const desdeCatalogo = (items) =>
@@ -14,60 +19,52 @@ const desdeCatalogo = (items) =>
     };
   });
 
-export const carouselSlides = [
-  {
-    id: 1,
-    to: "/productos?categoria=conjuntos",
-    alt: "Conjuntos de encaje en tonos suaves",
-    image: hero1,
-    mobileImage: "https://placehold.co/800x1000/f8d0cb/3e1a26?text=Coleccion+1",
-  },
-  {
-    id: 2,
-    to: "/productos?categoria=brasieres",
-    alt: "Brasieres cómodos para todos los días",
-    image: hero2,
-    mobileImage: "https://placehold.co/800x1000/f3c4c0/3e1a26?text=Coleccion+2",
-  },
-  {
-    id: 3,
-    to: "/productos?categoria=pijamas",
-    alt: "Pijamas suaves para descansar",
-    image: "https://placehold.co/1600x700/ebd3ce/3e1a26?text=Coleccion+3",
-    mobileImage: "https://placehold.co/800x1000/ebd3ce/3e1a26?text=Coleccion+3",
-  },
-];
+export const heroPrincipal = {
+  to: "/ofertas",
+  alt: "Super Sale: hasta 50% off en referencias seleccionadas",
+  image: hero1,
+  mobileImage: hero1,
+  // El encuadre deja ver el titular, el 50% y el botón sin cortar la cabeza.
+  position: "center 33%",
+};
 
+// Cinco fotos editoriales en blanco y negro, recortadas 4:5 y con el mismo
+// tono (ver scripts de conversión). La primera ocupa el bloque grande.
 export const categories = [
   {
     id: 1,
-    slug: "brasieres",
-    name: "Brasier",
-    image: "https://placehold.co/600x700/f8d0cb/3e1a26?text=Brasier",
+    slug: "conjuntos",
+    name: "Conjunto",
+    image: categoriaConjunto,
+    position: "50% 26%",
   },
   {
     id: 2,
-    slug: "panties",
-    name: "Pantie",
-    image: "https://placehold.co/600x700/f3c4c0/3e1a26?text=Pantie",
+    slug: "brasieres",
+    name: "Brasier",
+    image: categoriaBrasier,
+    position: "center",
   },
   {
     id: 3,
-    slug: "conjuntos",
-    name: "Conjunto",
-    image: "https://placehold.co/600x700/ebd3ce/3e1a26?text=Conjunto",
+    slug: "panties",
+    name: "Pantie",
+    image: categoriaPantie,
+    position: "center",
   },
   {
     id: 4,
-    slug: "pijamas",
-    name: "Pijama",
-    image: "https://placehold.co/900x700/f8d0cb/3e1a26?text=Pijama",
+    slug: "bodies",
+    name: "Body",
+    image: categoriaBody,
+    position: "center",
   },
   {
     id: 5,
-    slug: "tops",
-    name: "Top",
-    image: "https://placehold.co/900x700/f3c4c0/3e1a26?text=Top",
+    slug: "pijamas",
+    name: "Pijama",
+    image: categoriaPijama,
+    position: "center",
   },
 ];
 
@@ -128,8 +125,8 @@ export const editorialBanner = {
   eyebrow: "Luxury collection",
   title: "Elegancia que comienza contigo",
   cta: "Descubrir la colección",
-  alt: "Mujer luciendo un conjunto de la colección",
-  image: "https://placehold.co/1600x700/f3c4c0/3e1a26?text=Banner+editorial",
+  alt: "Mujer luciendo un brasier blanco de la colección",
+  image: bannerEditorial,
 };
 
 export const benefits = [

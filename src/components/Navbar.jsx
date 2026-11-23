@@ -11,25 +11,26 @@ import {
 } from "lucide-react";
 import { mainLinks, moreLinks } from "../data/navData";
 import { cerrarSesion } from "../api/sesion";
+import { useCarrito } from "../context/CarritoContext";
 import { useSesion } from "../hooks/useSesion";
 
-const ICON_STROKE = 1.25;
+const ICON_STROKE = 1.1;
 
 const iconButton =
-  "relative flex h-9 w-9 items-center justify-center text-plum transition-colors hover:text-dusty-rose";
+  "relative flex h-10 w-10 items-center justify-center text-plum/85 transition-colors hover:text-wine";
 
 const desktopLinkClass = (isActive, highlight) =>
   [
-    "relative text-[13px] leading-none tracking-wide transition-colors after:absolute after:inset-x-0 after:-bottom-1 after:h-px after:origin-left after:bg-champagne after:transition-transform hover:after:scale-x-100",
-    highlight ? "text-dusty-rose" : "text-plum hover:text-wine",
+    "relative text-[11px] uppercase leading-none tracking-[0.16em] transition-colors after:absolute after:inset-x-0 after:-bottom-2 after:h-px after:origin-center after:bg-champagne after:transition-transform after:duration-300 hover:after:scale-x-100",
+    highlight ? "text-dusty-rose" : "text-plum/85 hover:text-wine",
     isActive ? "after:scale-x-100" : "after:scale-x-0",
   ].join(" ");
 
 const mobileLinkClass = (isActive, highlight) =>
   [
-    "block border-b border-border py-3 text-sm tracking-wide transition-colors",
-    highlight ? "text-dusty-rose" : "text-plum",
-    isActive ? "font-medium" : "",
+    "flex items-center border-b border-border/60 py-4 text-[11px] uppercase tracking-[0.18em] transition-colors",
+    highlight ? "text-dusty-rose" : "text-plum/85",
+    isActive ? "text-wine" : "",
   ].join(" ");
 
 const isLinkActive = (to, pathname, search) => {
@@ -48,14 +49,14 @@ function Wordmark() {
   return (
     <span
       style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
-      className="block whitespace-nowrap pl-[0.3em] text-[22px] font-medium leading-none tracking-[0.3em] text-wine xl:text-[24px]"
+      className="inline-block whitespace-nowrap bg-gradient-to-r from-wine via-dusty-rose to-champagne bg-clip-text pl-[0.06em] text-[24px] font-medium leading-[1.1] tracking-[0.18em] text-transparent xl:text-[28px]"
     >
-      LENCERÍA LR
+      Lujo Rosado
     </span>
   );
 }
 
-export default function Navbar({ cartCount = 0 }) {
+export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
@@ -66,6 +67,7 @@ export default function Navbar({ cartCount = 0 }) {
   const { pathname, search } = useLocation();
   const navigate = useNavigate();
   const usuario = useSesion();
+  const { cantidad: cartCount, abrirCarrito } = useCarrito();
 
   const salir = () => {
     cerrarSesion();
@@ -138,8 +140,8 @@ export default function Navbar({ cartCount = 0 }) {
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-border bg-[#FDF3F1]">
-        <div className="mx-auto grid h-12 max-w-[1536px] grid-cols-[1fr_auto_1fr] items-center gap-x-8 px-4 xl:px-6">
+      <header className="sticky top-0 z-40 border-b border-border/70 bg-[#FDF3F1]/90 backdrop-blur-md">
+        <div className="mx-auto grid h-14 max-w-[1536px] grid-cols-[1fr_auto_1fr] items-center gap-x-8 px-4 xl:h-16 xl:px-8">
           <div className="flex items-center">
             <button
               type="button"
@@ -153,12 +155,12 @@ export default function Navbar({ cartCount = 0 }) {
             </button>
 
             <nav aria-label="Principal" className="hidden xl:block">
-              <ul className="flex h-12 items-center gap-6">
+              <ul className="flex h-full items-center gap-7">
                 {mainLinks.map((link) => {
                   const active = isLinkActive(link.to, pathname, search);
 
                   return (
-                    <li key={link.id} className="flex h-12 items-center">
+                    <li key={link.id} className="flex h-full items-center">
                       <Link
                         to={link.to}
                         aria-current={active ? "page" : undefined}
@@ -170,7 +172,7 @@ export default function Navbar({ cartCount = 0 }) {
                   );
                 })}
 
-                <li ref={moreRef} className="relative flex h-12 items-center">
+                <li ref={moreRef} className="relative flex h-full items-center">
                   <button
                     type="button"
                     onClick={() => setMoreOpen((open) => !open)}
@@ -190,7 +192,7 @@ export default function Navbar({ cartCount = 0 }) {
                   </button>
 
                   {moreOpen && (
-                    <ul className="absolute left-0 top-full min-w-40 border border-border bg-[#FDF3F1] py-2">
+                    <ul className="absolute left-0 top-full min-w-44 border border-border/70 bg-white py-2 shadow-[0_24px_48px_-28px_rgba(62,26,38,0.45)]">
                       {moreLinks.map((link) => {
                         const active = isLinkActive(link.to, pathname, search);
 
@@ -199,8 +201,8 @@ export default function Navbar({ cartCount = 0 }) {
                             <Link
                               to={link.to}
                               aria-current={active ? "page" : undefined}
-                              className={`block px-5 py-2 text-[13px] tracking-wide text-plum transition-colors hover:bg-silk/40 hover:text-wine ${
-                                active ? "font-medium" : ""
+                              className={`block px-5 py-2.5 text-[11px] uppercase tracking-[0.14em] text-plum/85 transition-colors hover:bg-silk/30 hover:text-wine ${
+                                active ? "text-wine" : ""
                               }`}
                             >
                               {link.label}
@@ -215,7 +217,7 @@ export default function Navbar({ cartCount = 0 }) {
             </nav>
           </div>
 
-          <Link to="/home" aria-label="Lencería LR, ir al inicio">
+          <Link to="/home" aria-label="Lujo Rosado, ir al inicio">
             <Wordmark />
           </Link>
 
@@ -227,7 +229,7 @@ export default function Navbar({ cartCount = 0 }) {
               aria-expanded={searchOpen}
               className={iconButton}
             >
-              <Search size={20} strokeWidth={ICON_STROKE} />
+              <Search size={18} strokeWidth={ICON_STROKE} />
             </button>
 
             {usuario ? (
@@ -238,7 +240,7 @@ export default function Navbar({ cartCount = 0 }) {
                 title={`Hola, ${usuario.nombre}. Cerrar sesión`}
                 className={`${iconButton} hidden xl:flex`}
               >
-                <LogOut size={20} strokeWidth={ICON_STROKE} />
+                <LogOut size={18} strokeWidth={ICON_STROKE} />
               </button>
             ) : (
               <Link
@@ -246,35 +248,38 @@ export default function Navbar({ cartCount = 0 }) {
                 aria-label="Mi cuenta"
                 className={`${iconButton} hidden xl:flex`}
               >
-                <User size={20} strokeWidth={ICON_STROKE} />
+                <User size={18} strokeWidth={ICON_STROKE} />
               </Link>
             )}
 
-            <Link
-              to="/carrito"
-              aria-label="Carrito de compras"
+            <button
+              type="button"
+              onClick={abrirCarrito}
+              aria-label={`Abrir carrito de compras${
+                cartCount > 0 ? ` (${cartCount})` : ""
+              }`}
               className={iconButton}
             >
-              <ShoppingBag size={20} strokeWidth={ICON_STROKE} />
+              <ShoppingBag size={18} strokeWidth={ICON_STROKE} />
 
               {cartCount > 0 && (
-                <span className="absolute right-0 top-0 flex h-4 min-w-4 items-center justify-center bg-dusty-rose px-1 text-[10px] font-medium text-white">
+                <span className="absolute right-0.5 top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-wine px-1 text-[9px] font-medium leading-none text-white ring-2 ring-[#FDF3F1]">
                   {cartCount}
                 </span>
               )}
-            </Link>
+            </button>
           </div>
         </div>
 
         {searchOpen && (
-          <div className="absolute inset-x-0 top-full border-b border-border bg-[#FDF3F1] px-4 py-4 xl:px-6">
+          <div className="absolute inset-x-0 top-full border-b border-border/70 bg-[#FDF3F1]/97 px-4 py-5 shadow-[0_24px_48px_-30px_rgba(62,26,38,0.4)] backdrop-blur-md xl:px-8">
             <form
               role="search"
               onSubmit={handleSearch}
-              className="mx-auto flex max-w-2xl items-center gap-3 border-b border-plum/40 pb-2"
+              className="mx-auto flex max-w-2xl items-center gap-3 border-b border-plum/25 pb-2.5"
             >
               <Search
-                size={20}
+                size={18}
                 strokeWidth={ICON_STROKE}
                 className="text-mauve"
                 aria-hidden="true"
@@ -287,7 +292,7 @@ export default function Navbar({ cartCount = 0 }) {
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Buscar productos"
                 aria-label="Buscar productos"
-                className="w-full bg-transparent text-sm text-plum outline-none placeholder:text-mauve/70"
+                className="w-full bg-transparent text-[13px] tracking-wide text-plum outline-none placeholder:text-mauve/70"
               />
 
               <button
@@ -314,11 +319,11 @@ export default function Navbar({ cartCount = 0 }) {
       <aside
         id="mobile-menu"
         aria-label="Menú"
-        className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col bg-[#FDF3F1] transition-[transform,visibility] duration-300 xl:hidden ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-72 flex-col border-r border-border/70 bg-[#FDF3F1] shadow-[24px_0_48px_-32px_rgba(62,26,38,0.5)] transition-[transform,visibility] duration-300 xl:hidden ${
           menuOpen ? "translate-x-0" : "invisible -translate-x-full"
         }`}
       >
-        <div className="flex h-12 items-center justify-between border-b border-border px-5">
+        <div className="flex h-14 items-center justify-between border-b border-border/70 px-5">
           <Wordmark />
 
           <button
@@ -366,7 +371,7 @@ export default function Navbar({ cartCount = 0 }) {
               ) : (
                 <Link
                   to="/login"
-                  className="block py-3 text-sm tracking-wide text-plum"
+                  className="flex items-center border-b border-border/60 py-4 text-[11px] uppercase tracking-[0.18em] text-plum/85"
                 >
                   Mi cuenta
                 </Link>
@@ -374,6 +379,12 @@ export default function Navbar({ cartCount = 0 }) {
             </li>
           </ul>
         </nav>
+
+        <div className="border-t border-border/60 px-5 py-5">
+          <p className="font-heading text-[15px] italic leading-snug text-mauve">
+            Porque la lencería también es amor propio.
+          </p>
+        </div>
       </aside>
     </>
   );

@@ -1,13 +1,17 @@
 
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 import { registrarUsuario } from "../../api/usuarios";
 import { guardarSesion } from "../../api/sesion";
 
 export default function Register() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const destino = location.state?.desde || "/home";
   const [error, setError] = useState("");
   const [enviando, setEnviando] = useState(false);
+  const [verPassword, setVerPassword] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,13 +32,12 @@ export default function Register() {
 
       if (!usuario || !token) {
         throw new Error(
-          "El registro fue recibido, pero el servidor no devolvió una sesión válida. Inicia sesión para continuar."
+          "El registro fue recibido, pero el servidor no devolvió una sesión válida. Inicia sesión para continuar.",
         );
       }
 
       guardarSesion(usuario, token, true);
-
-      navigate("/home");
+      navigate(destino, { replace: true });
     } catch (fallo) {
       setError(fallo.message || "No se pudo crear la cuenta.");
     } finally {
@@ -89,13 +92,28 @@ export default function Register() {
               <i className="fa-solid fa-lock"></i>
               <input
                 id="reg-password"
-                type="password"
+                type={verPassword ? "text" : "password"}
                 name="password"
                 placeholder="••••••••"
                 autoComplete="new-password"
                 minLength={8}
                 required
               />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setVerPassword((valor) => !valor)}
+                aria-label={
+                  verPassword ? "Ocultar contraseña" : "Mostrar contraseña"
+                }
+                aria-pressed={verPassword}
+              >
+                {verPassword ? (
+                  <EyeOff size={18} strokeWidth={1.6} aria-hidden="true" />
+                ) : (
+                  <Eye size={18} strokeWidth={1.6} aria-hidden="true" />
+                )}
+              </button>
             </div>
           </div>
 
@@ -114,8 +132,11 @@ export default function Register() {
           <button type="submit" className="button" disabled={enviando}>
             {enviando ? "Creando cuenta…" : "Crear cuenta"}
           </button>
-
-          <Link to="/login" className="button button-outline">
+          <Link
+            to="/login"
+            state={location.state}
+            className="button button-outline"
+          >
             Ya tengo cuenta
           </Link>
         </div>

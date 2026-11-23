@@ -17,3 +17,7 @@ export const iniciarSesion = ({ email, password }) =>
 /** GET /usuarios/:id — datos públicos de un usuario. */
 export const obtenerUsuario = (id, { signal } = {}) =>
   api(`/usuarios/${encodeURIComponent(id)}`, { signal });
+
+/** PATCH /usuarios/perfil — actualiza los datos de la cuenta actual. */
+export const actualizarPerfil = (datos) =>
+  api("/usuarios/perfil", { method: "PATCH", body: datos });

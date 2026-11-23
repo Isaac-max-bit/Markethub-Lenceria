@@ -15,6 +15,8 @@ import MainLayout from "../layouts/MainLayout";
 import Home from "../pages/home";
 import Products from "../pages/Products";
 import ProductDetail from "../pages/ProductDetail";
+import Cart from "../pages/Cart";
+import Payment from "../pages/Payment";
 import Search from "../pages/Search";
 import SizeGuide from "../pages/SizeGuide";
 import Shipping from "../pages/Shipping";
@@ -51,6 +53,8 @@ export default function AppRouter() {
           <Route path="/home" element={<Home />} />
           <Route path="/productos" element={<Products />} />
           <Route path="/productos/:id" element={<ProductDetail />} />
+          <Route path="/carrito" element={<Cart />} />
+          <Route path="/pago" element={<Payment />} />
           <Route path="/ofertas" element={<Products />} />
           <Route path="/buscar" element={<Search />} />
           <Route path="/guia-de-tallas" element={<SizeGuide />} />

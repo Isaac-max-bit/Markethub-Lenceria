@@ -32,3 +32,10 @@ button,
 input {
   border-radius: 0;
 }
+
+/* Todo lo clicable muestra la manito; los deshabilitados no. */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+select {
+  cursor: pointer;
+}

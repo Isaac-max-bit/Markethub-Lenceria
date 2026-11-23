@@ -60,6 +60,7 @@ export default function HeroCarousel({ slides, interval = 6500 }) {
                 <img
                   src={slide.mobileImage}
                   alt={slide.alt}
+                  style={{ objectPosition: slide.position ?? "center" }}
                   className="absolute inset-0 h-full w-full object-contain md:object-cover"
                 />
               </picture>
