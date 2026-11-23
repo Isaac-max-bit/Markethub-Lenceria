@@ -10,6 +10,7 @@
   --mauve: #8a5a6b;
   --champagne: #c6a27c;
   --border: #ebd3ce;
+  --cream: #fbf4ef;
 }
 
 @theme static {
@@ -26,6 +27,7 @@
   --color-mauve: var(--mauve);
   --color-champagne: var(--champagne);
   --color-border: var(--border);
+  --color-cream: var(--cream);
 }
 
 button,

@@ -1,4 +1,5 @@
 import { Outlet } from "react-router-dom";
+import BrandLogo from "../../components/BrandLogo";
 import "./AuthLayout.css";
 import "./Auth.css";
 
@@ -14,11 +15,10 @@ export default function AuthLayout() {
 
           <div className="brand-content">
             <div className="title-wrap">
-              <i className="fa-solid fa-asterisk star"></i>
-              <h1>Lencería Lujo Rosado</h1>
-              <svg className="orbit" viewBox="0 0 300 120" aria-hidden="true">
-                <ellipse cx="150" cy="60" rx="145" ry="52" />
-              </svg>
+              <BrandLogo
+                tono="dark"
+                className="h-10 opacity-80 sm:h-12"
+              />
             </div>
             <p>Elegancia que comienza contigo.</p>
           </div>

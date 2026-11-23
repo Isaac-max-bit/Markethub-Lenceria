@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { PackageCheck, ShieldCheck, Truck } from "lucide-react";
 import ProductCard from "../components/ProductCard";
 import ProductCarousel from "../components/ProductCarousel";
 import SectionTitle from "../components/SectionTitle";
@@ -12,6 +13,12 @@ import {
   benefits,
   testimonials,
 } from "../data/homeData";
+
+const ICONOS_SERVICIO = {
+  envio: Truck,
+  cambios: PackageCheck,
+  pago: ShieldCheck,
+};
 
 function Section({ title, subtitle, children, className = "" }) {
   return (
@@ -52,15 +59,6 @@ export default function Home() {
               className="absolute inset-0 h-full w-full object-cover"
             />
           </picture>
-          {/* Degradado inferior: da profundidad y funde la franja legal. */}
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_top,rgba(43,10,18,0.9)_0%,rgba(43,10,18,0.32)_12%,rgba(43,10,18,0.07)_30%,rgba(43,10,18,0)_50%)]"
-          />
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_55%,rgba(43,10,18,0.18)_100%)]"
-          />
         </Link>
       </section>
 
@@ -130,45 +128,47 @@ export default function Home() {
         </div>
       </section>
 
-      <Section
-        title="Más vendidos"
-        subtitle="Las favoritas de nuestras clientas, elegidas por su comodidad y su ajuste"
-        className="bg-white"
-      >
-        <EstadoCatalogo
-          cargando={cargando}
-          error={error}
-          vacio={bestSellers.length === 0}
-          mensajeVacio="Todavía no hay productos cargados."
-          onReintentar={recargar}
-        >
-          <ProductCarousel
-            products={bestSellers}
-            label="Productos más vendidos"
-          />
-        </EstadoCatalogo>
-      </Section>
-
-      <section className="border-b border-border/70 bg-white">
-        <ul className="mx-auto grid max-w-6xl grid-cols-1 divide-y divide-border/60 px-6 md:grid-cols-3 md:divide-x md:divide-y-0">
-          {benefits.map((benefit) => (
-            <li
-              key={benefit.id}
-              className="flex flex-col items-center gap-3 px-6 py-10 text-center"
-            >
-              <i
-                className={`fa-solid ${benefit.icon} text-lg text-champagne`}
-                aria-hidden="true"
-              />
-              <h3 className="text-[11px] font-medium uppercase tracking-[0.26em] text-plum">
-                {benefit.title}
-              </h3>
-              <p className="max-w-[15rem] text-[13px] leading-relaxed text-mauve">
-                {benefit.text}
+      {/* Más vendidos: mismo ritmo editorial que la cuadrícula de categorías */}
+      <section className="border-b border-border/60 bg-white">
+        <div className="mx-auto max-w-6xl px-6 py-24">
+          <div className="mb-10 flex flex-wrap items-end justify-between gap-x-10 gap-y-5 md:mb-12">
+            <div>
+              <h2 className="font-heading text-3xl italic leading-none text-plum md:text-5xl">
+                Más vendidos
+              </h2>
+              <p className="mt-3 max-w-lg text-[15px] leading-relaxed text-mauve md:text-base">
+                Las favoritas de nuestras clientas, elegidas por su comodidad y
+                su ajuste.
               </p>
-            </li>
-          ))}
-        </ul>
+            </div>
+
+            <Link
+              to="/productos"
+              className="group inline-flex items-center gap-2 border-b border-plum/20 pb-1.5 text-[10px] uppercase tracking-[0.24em] text-plum transition-colors duration-300 hover:border-plum/70 hover:text-wine md:text-[11px]"
+            >
+              Ver todo
+              <span
+                aria-hidden="true"
+                className="transition-transform duration-300 group-hover:translate-x-1"
+              >
+                →
+              </span>
+            </Link>
+          </div>
+
+          <EstadoCatalogo
+            cargando={cargando}
+            error={error}
+            vacio={bestSellers.length === 0}
+            mensajeVacio="Todavía no hay productos cargados."
+            onReintentar={recargar}
+          >
+            <ProductCarousel
+              products={bestSellers}
+              label="Productos más vendidos"
+            />
+          </EstadoCatalogo>
+        </div>
       </section>
 
       <section className="relative h-[26rem] overflow-hidden bg-petal md:h-[34rem]">
@@ -215,6 +215,35 @@ export default function Home() {
         </EstadoCatalogo>
       </Section>
 
+      {/* Servicios: íconos de línea fina y títulos serif con subrayado */}
+      <section className="border-y border-border/60 bg-cream">
+        <ul className="mx-auto grid max-w-6xl grid-cols-1 divide-y divide-border/70 px-6 md:grid-cols-3 md:divide-x md:divide-y-0">
+          {benefits.map((benefit) => {
+            const Icono = ICONOS_SERVICIO[benefit.icon] ?? Truck;
+
+            return (
+              <li
+                key={benefit.id}
+                className="flex flex-col items-center px-6 py-8 text-center md:py-9"
+              >
+                <Icono
+                  size={32}
+                  strokeWidth={1}
+                  aria-hidden="true"
+                  className="text-plum"
+                />
+                <h3 className="mt-4 inline-block border-b border-plum/25 pb-1 font-heading text-[18px] leading-none text-plum md:text-[20px]">
+                  {benefit.title}
+                </h3>
+                <p className="mt-2 font-heading text-[12px] italic leading-relaxed text-mauve md:text-[13px]">
+                  {benefit.text}
+                </p>
+              </li>
+            );
+          })}
+        </ul>
+      </section>
+
       <Section
         title="Qué dicen nuestros clientes"
         subtitle="Opiniones reales de quienes ya usan nuestras prendas todos los días"
@@ -232,7 +261,7 @@ export default function Home() {
             return (
               <li
                 key={item.id}
-                className="group relative flex flex-col border border-border/70 bg-white px-7 pb-7 pt-8 shadow-[0_12px_32px_-26px_rgba(74,21,38,0.28)] transition-all duration-300 hover:-translate-y-1 hover:border-champagne/60 hover:shadow-[0_18px_40px_-24px_rgba(74,21,38,0.35)]"
+                className="group relative flex flex-col border border-border/70 bg-cream px-7 pb-7 pt-8 shadow-[0_12px_32px_-26px_rgba(74,21,38,0.28)] transition-all duration-300 hover:-translate-y-1 hover:border-champagne/60 hover:shadow-[0_18px_40px_-24px_rgba(74,21,38,0.35)]"
               >
                 <span
                   aria-hidden="true"

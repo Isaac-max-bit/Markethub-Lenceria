@@ -132,19 +132,19 @@ export const editorialBanner = {
 export const benefits = [
   {
     id: 1,
-    icon: "fa-truck-fast",
+    icon: "envio",
     title: "Envíos a todo el país",
     text: "Recibe tu pedido en la puerta de tu casa.",
   },
   {
     id: 2,
-    icon: "fa-rotate",
+    icon: "cambios",
     title: "Cambios fáciles",
     text: "Si la talla no es la ideal, lo resolvemos.",
   },
   {
     id: 3,
-    icon: "fa-lock",
+    icon: "pago",
     title: "Pago seguro",
     text: "Tus datos siempre protegidos.",
   },

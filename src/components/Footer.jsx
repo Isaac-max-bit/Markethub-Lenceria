@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import BrandLogo from "./BrandLogo";
 
 const shopLinks = [
   { label: "Ofertas", to: "/ofertas" },
@@ -87,9 +88,11 @@ export default function Footer() {
         <div className="col-span-2 flex flex-col items-start sm:col-span-1">
           <Link
             to="/home"
-            className="font-heading text-[26px] font-medium tracking-[0.16em] text-silk transition-colors hover:text-champagne sm:text-[30px]"
+            onClick={() => window.scrollTo({ top: 0, left: 0, behavior: "smooth" })}
+            aria-label="Lujo Rosado, ir al inicio"
+            className="inline-flex items-center transition-opacity hover:opacity-80"
           >
-            Lujo Rosado
+            <BrandLogo tono="light" className="h-8 opacity-95 sm:h-9" />
           </Link>
 
           <p className="mt-3.5 max-w-[230px] font-heading text-[17px] italic leading-normal text-petal sm:text-[19px]">

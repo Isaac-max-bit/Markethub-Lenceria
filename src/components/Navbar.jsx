@@ -13,6 +13,7 @@ import { mainLinks, moreLinks } from "../data/navData";
 import { cerrarSesion } from "../api/sesion";
 import { useCarrito } from "../context/CarritoContext";
 import { useSesion } from "../hooks/useSesion";
+import BrandLogo from "./BrandLogo";
 
 const ICON_STROKE = 1.1;
 
@@ -44,17 +45,6 @@ const isLinkActive = (to, pathname, search) => {
 };
 
 const mobileLinks = [...mainLinks, ...moreLinks];
-
-function Wordmark() {
-  return (
-    <span
-      style={{ fontFamily: "'Cormorant Garamond', Georgia, serif" }}
-      className="inline-block whitespace-nowrap bg-gradient-to-r from-wine via-dusty-rose to-champagne bg-clip-text pl-[0.06em] text-[24px] font-medium leading-[1.1] tracking-[0.18em] text-transparent xl:text-[28px]"
-    >
-      Lujo Rosado
-    </span>
-  );
-}
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -138,6 +128,12 @@ export default function Navbar() {
     setQuery("");
   };
 
+  // El logo siempre lleva al inicio de la página, aunque ya estemos en /home.
+  const irAlInicio = () => {
+    setMenuOpen(false);
+    window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+  };
+
   return (
     <>
       <header className="sticky top-0 z-40 border-b border-border/70 bg-[#FDF3F1]/90 backdrop-blur-md">
@@ -217,8 +213,13 @@ export default function Navbar() {
             </nav>
           </div>
 
-          <Link to="/home" aria-label="Lujo Rosado, ir al inicio">
-            <Wordmark />
+          <Link
+            to="/home"
+            onClick={irAlInicio}
+            aria-label="Lujo Rosado, ir al inicio"
+            className="inline-flex items-center transition-opacity hover:opacity-80"
+          >
+            <BrandLogo className="h-7 xl:h-8" />
           </Link>
 
           <div className="flex items-center justify-self-end">
@@ -324,7 +325,14 @@ export default function Navbar() {
         }`}
       >
         <div className="flex h-14 items-center justify-between border-b border-border/70 px-5">
-          <Wordmark />
+          <Link
+            to="/home"
+            onClick={irAlInicio}
+            aria-label="Lujo Rosado, ir al inicio"
+            className="inline-flex items-center transition-opacity hover:opacity-80"
+          >
+            <BrandLogo className="h-6" />
+          </Link>
 
           <button
             type="button"
