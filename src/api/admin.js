@@ -24,3 +24,27 @@ export const buscarClientes = (nombre = "") => {
 
 // ============ PERFIL ============
 export const obtenerPerfilAdmin = (opciones) => api("/usuarios/perfil", opciones);
+
+// ============ DASHBOARD ============
+// Estas rutas responden { success, mensaje, data }.
+const dashboard = (ruta, opciones) => api(`/api/dashboard/${ruta}`, opciones);
+
+export const obtenerResumenDashboard = (opciones) => dashboard("resumen", opciones);
+
+export const obtenerVentasPorMes = (opciones) =>
+  dashboard("ventas-por-mes", opciones);
+
+export const obtenerUsuariosPorRol = (opciones) =>
+  dashboard("usuarios-por-rol", opciones);
+
+export const obtenerPedidosPorEstado = (opciones) =>
+  dashboard("pedidos-por-estado", opciones);
+
+export const obtenerProductosBajoStock = (opciones) =>
+  dashboard("productos-bajo-stock", opciones);
+
+export const obtenerPedidosRecientes = (opciones) =>
+  dashboard("pedidos-recientes", opciones);
+
+export const obtenerMasVendidos = (opciones) =>
+  dashboard("productos-mas-vendidos", opciones);

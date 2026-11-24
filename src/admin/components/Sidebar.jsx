@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
   Package,
@@ -7,9 +7,9 @@ import {
   ShoppingBag,
   TicketPercent,
   Settings,
-  ArrowLeft,
-  Store,
 } from "lucide-react";
+import BrandLogo from "../../components/BrandLogo";
+import { useSesion } from "../../hooks/useSesion";
 
 const menuItems = [
   {
@@ -27,11 +27,13 @@ const menuItems = [
     title: "Categorías",
     path: "/admin/categorias",
     icon: Tags,
+    soloAdmin: true,
   },
   {
     title: "Clientes",
     path: "/admin/clientes",
     icon: Users,
+    soloAdmin: true,
   },
   {
     title: "Pedidos",
@@ -42,77 +44,65 @@ const menuItems = [
     title: "Descuentos",
     path: "/admin/descuentos",
     icon: TicketPercent,
+    soloAdmin: true,
+  },
+  {
+    title: "Configuración",
+    path: "/admin/configuracion",
+    icon: Settings,
+    soloAdmin: true,
   },
 ];
 
-export default function Sidebar() {
+const navBase =
+  "flex h-[62px] items-center gap-4 rounded-md border-l-4 px-5 text-[15px] font-medium transition-colors duration-200";
+
+const activo = "border-accent bg-act text-ink";
+const inactivo = "border-transparent text-ink hover:bg-page";
+
+export default function Sidebar({ abierto }) {
+  const usuario = useSesion();
+  const esAdmin = String(usuario?.rol || "").toLowerCase() === "admin";
+  const items = menuItems.filter((item) => esAdmin || !item.soloAdmin);
+
   return (
-    <aside className="flex min-h-screen w-64 shrink-0 flex-col bg-[#3e1a26] text-white">
-
-      {/* LOGO */}
-      <div className="flex h-20 items-center gap-3 border-b border-white/10 px-6">
-        <Store size={27} className="text-[#f3c4c0]" />
-
-        <div>
-          <h1 className="font-heading text-2xl font-semibold">
-            MarketHub
-          </h1>
-          <p className="text-[10px] uppercase tracking-[0.25em] text-[#f3c4c0]">
-            Administration
-          </p>
-        </div>
-      </div>
-
-      {/* NAVEGACIÓN */}
-      <nav className="flex-1 space-y-2 px-4 py-8">
-
-        <p className="mb-5 px-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/40">
-          Menú principal
-        </p>
-
-        {menuItems.map((item) => {
-          const Icon = item.icon;
-
-          return (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              end={item.end}
-              className={({ isActive }) =>
-                `flex items-center gap-3 border-l-[3px] px-4 py-3 text-sm transition-all duration-200 ${
-                  isActive
-                    ? "border-[#f3c4c0] bg-white/10 text-[#f8d0cb]"
-                    : "border-transparent text-white/65 hover:bg-white/5 hover:text-white"
-                }`
-              }
-            >
-              <Icon size={19} strokeWidth={1.8} />
-              <span>{item.title}</span>
-            </NavLink>
-          );
-        })}
-      </nav>
-
-      {/* CONFIGURACIÓN */}
-      <div className="border-t border-white/10 p-4">
-
-        <NavLink
-          to="/admin/configuracion"
-          className="flex items-center gap-3 px-4 py-3 text-sm text-white/65 transition hover:text-white"
-        >
-          <Settings size={19} />
-          Configuración
-        </NavLink>
-
-        <NavLink
+    <aside
+      className={`fixed inset-y-0 left-0 z-40 flex h-screen w-72 shrink-0 flex-col overflow-y-auto border-r border-border bg-card px-2.5 transition-[margin] duration-300 md:sticky md:top-0 ${
+        abierto ? "ml-0" : "-ml-72"
+      }`}
+    >
+      <div className="flex h-20 shrink-0 items-center px-3.5">
+        <Link
           to="/home"
-          className="flex items-center gap-3 px-4 py-3 text-sm text-white/65 transition hover:text-white"
+          aria-label="Lujo Rosado, ir a la tienda"
+          className="inline-flex w-fit items-center transition-opacity hover:opacity-80"
         >
-          <ArrowLeft size={19} />
-          Volver a la tienda
-        </NavLink>
-
+          <BrandLogo className="h-7" />
+        </Link>
       </div>
+
+      <nav className="mt-2">
+        <ul className="space-y-1">
+          {items.map((item) => {
+            const Icon = item.icon;
+
+            return (
+              <li key={item.path}>
+                <NavLink
+                  to={item.path}
+                  end={item.end}
+                  className={({ isActive }) =>
+                    `${navBase} ${isActive ? activo : inactivo}`
+                  }
+                >
+                  <Icon size={22} strokeWidth={1.6} />
+                  <span>{item.title}</span>
+                </NavLink>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
     </aside>
   );
 }

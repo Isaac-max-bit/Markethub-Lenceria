@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&display=swap");
 @import "tailwindcss";
 
 :root {
@@ -11,11 +12,21 @@
   --champagne: #c6a27c;
   --border: #ebd3ce;
   --cream: #fbf4ef;
+  --page: #f5e7e2;
+  --card: #ffffff;
+  --ink: #3e1a26;
+  --muted: #8a5a6b;
+  --act: #f8d0cb;
+  --solid: #3e1a26;
+  --accent: #a94f63;
+  --vino: #5b2333;
 }
 
 @theme static {
   --font-heading: "Cormorant Garamond", Georgia, serif;
   --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display:
+    "Montserrat", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 @theme inline {
@@ -28,6 +39,27 @@
   --color-champagne: var(--champagne);
   --color-border: var(--border);
   --color-cream: var(--cream);
+  --color-page: var(--page);
+  --color-card: var(--card);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-act: var(--act);
+  --color-solid: var(--solid);
+  --color-accent: var(--accent);
+  --color-vino: var(--vino);
+}
+
+.tema-oscuro {
+  --page: #120609;
+  --card: #201017;
+  --ink: #f6e6e2;
+  --muted: #c9a2ad;
+  --act: #4a2431;
+  --solid: #7a3447;
+  --accent: #d27c90;
+  --vino: #7a3447;
+  --border: #33202a;
+  color-scheme: dark;
 }
 
 button,
