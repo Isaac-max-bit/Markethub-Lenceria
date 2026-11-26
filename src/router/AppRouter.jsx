@@ -27,6 +27,8 @@ import Faq from "../pages/Faq";
 import RutaAdmin from "../admin/components/RutaAdmin";
 import AdminLayout from "../admin/layouts/AdminLayout";
 import Dashboard from "../admin/pages/Dashboard";
+import Productos from "../admin/pages/Productos";
+import Categorias from "../admin/pages/Categorias";
 import Proximamente from "../admin/pages/Proximamente";
 
 export default function AppRouter() {
@@ -67,6 +69,8 @@ export default function AppRouter() {
         <Route element={<RutaAdmin />}>
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Dashboard />} />
+            <Route path="productos" element={<Productos />} />
+            <Route path="categorias" element={<Categorias />} />
             <Route path="*" element={<Proximamente />} />
           </Route>
         </Route>

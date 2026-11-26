@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Calendar,
   Check,
@@ -19,126 +20,82 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import {
+  obtenerMasVendidos,
+  obtenerPedidosPorDia,
+  obtenerPedidosPorEstado,
+  obtenerPedidosRecientes,
+  obtenerProductosBajoStock,
+  obtenerResumenDashboard,
+  obtenerVentasPorDia,
+  obtenerVentasTotales,
+} from "../../api/admin";
+import { formatoPrecio } from "../../api/catalogo";
+import { cerrarSesion } from "../../api/sesion";
+import { useSesion } from "../../hooks/useSesion";
+import { Indicador, Kpi, Panel } from "../components/Tarjetas";
 
-const RESUMEN = [
-  {
-    etiqueta: "Pedidos de hoy",
-    valor: "$897.400",
-    icono: Layers,
-    tono: "bg-dusty-rose text-white",
-  },
-  {
-    etiqueta: "Este mes",
-    valor: "$13,1 M",
-    icono: Clock,
-    tono: "bg-[#e9a9a6] text-plum",
-  },
-  {
-    etiqueta: "Ventas totales",
-    valor: "$626,5 M",
-    icono: Calendar,
-    tono: "bg-vino text-silk",
-  },
+// Las rutas del dashboard responden { success, mensaje, data }.
+const datosDe = (respuesta, defecto) => respuesta?.data ?? defecto;
+
+const dinero = (valor) => formatoPrecio.format(Number(valor) || 0);
+
+// Cifras grandes abreviadas para las tarjetas: "$394,7 k" / "$13,1 M".
+const dineroCorto = (valor) => {
+  const numero = Number(valor) || 0;
+
+  if (numero >= 1000000) {
+    return `$${(numero / 1000000).toFixed(1).replace(".", ",")} M`;
+  }
+
+  if (numero >= 10000) {
+    return `$${(numero / 1000).toFixed(1).replace(".", ",")} k`;
+  }
+
+  return dinero(numero);
+};
+
+const MESES = [
+  "ene",
+  "feb",
+  "mar",
+  "abr",
+  "may",
+  "jun",
+  "jul",
+  "ago",
+  "sep",
+  "oct",
+  "nov",
+  "dic",
 ];
 
-const INDICADORES = [
-  {
-    etiqueta: "Total pedidos",
-    valor: 815,
-    icono: ShoppingBag,
-    tono: "bg-dusty-rose",
-  },
-  { etiqueta: "Pendientes", valor: 263, icono: Clock, tono: "bg-champagne" },
-  { etiqueta: "En camino", valor: 97, icono: Truck, tono: "bg-mauve" },
-  { etiqueta: "Entregados", valor: 418, icono: Check, tono: "bg-vino" },
-];
+// "2026-11-23" -> "23 nov"
+const fechaDia = (clave) => {
+  const [, mes, dia] = String(clave).split("-");
+  return `${Number(dia)} ${MESES[Number(mes) - 1] ?? mes}`;
+};
 
-const VENTAS_SEMANA = [
-  { dia: "23 nov", ventas: 400, pedidos: 4 },
-  { dia: "22 nov", ventas: 300, pedidos: 3 },
-  { dia: "21 nov", ventas: 100, pedidos: 1 },
-  { dia: "20 nov", ventas: 250, pedidos: 3 },
-  { dia: "19 nov", ventas: 200, pedidos: 2 },
-  { dia: "18 nov", ventas: 300, pedidos: 3 },
-  { dia: "17 nov", ventas: 1000, pedidos: 10 },
-];
+// Fecha completa del pedido en hora local: "21 de nov".
+const fechaPedido = (valor) => {
+  const fecha = new Date(valor);
+  if (Number.isNaN(fecha.getTime())) return "";
+  return `${fecha.getDate()} de ${MESES[fecha.getMonth()]}`;
+};
 
-const MAS_VENDIDOS = [
-  { nombre: "Conjunto Encaje Rosé", valor: 32, color: "#a94f63" },
-  { nombre: "Body Seda Champagne", valor: 26, color: "#c6a27c" },
-  { nombre: "Bralette Petal", valor: 24, color: "#8a5a6b" },
-  { nombre: "Pijama Satín Vino", valor: 18, color: "var(--vino)" },
-];
+const claveLocal = (fecha) =>
+  `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, "0")}-${String(
+    fecha.getDate(),
+  ).padStart(2, "0")}`;
 
-const ULTIMOS_PEDIDOS = [
-  {
-    id: 11,
-    cliente: "Manuela Bolivar",
-    fecha: "21 de nov",
-    estado: "pendiente",
-    total: "$ 139.800",
-  },
-  {
-    id: 9,
-    cliente: "Manuela Bolivar",
-    fecha: "21 de nov",
-    estado: "pendiente",
-    total: "$ 69.900",
-  },
-  {
-    id: 2,
-    cliente: "ADMIN",
-    fecha: "21 de oct",
-    estado: "entregado",
-    total: "$ 95.000",
-  },
-  {
-    id: 1,
-    cliente: "ADMIN",
-    fecha: "21 de oct",
-    estado: "pendiente",
-    total: "$ 90.000",
-  },
-];
+const PALETA = ["#a94f63", "#c6a27c", "#8a5a6b", "#5b2333", "#e9a9a6"];
 
-const STOCK_BAJO = [
-  { producto: "Body Elegante", variante: "L · Negro", unidades: 2 },
-  { producto: "Body Elegante", variante: "M · Negro", unidades: 2 },
-  { producto: "Pijama Satinada", variante: "S · Rosado", unidades: 2 },
-  { producto: "Pijama Sueños", variante: "M · Blanco", unidades: 2 },
-  { producto: "Pijama Satinada", variante: "M · Rosado", unidades: 2 },
-  { producto: "Pijama Sueños", variante: "S · Blanco", unidades: 2 },
-];
-
-const PEDIDOS_POR_ESTADO = [
-  {
-    estado: "pendiente",
-    porcentaje: 75,
-    cantidad: 3,
-    total: "$ 299.700",
-    color: "#c6a27c",
-  },
-  {
-    estado: "en camino",
-    porcentaje: 0,
-    cantidad: 0,
-    total: "$ 0",
-    color: "#a94f63",
-  },
-  {
-    estado: "entregado",
-    porcentaje: 25,
-    cantidad: 1,
-    total: "$ 95.000",
-    color: "#8a5a6b",
-  },
-  {
-    estado: "cancelado",
-    porcentaje: 0,
-    cantidad: 0,
-    total: "$ 0",
-    color: "var(--vino)",
-  },
+// Los cuatro estados de la tabla EstadoPedido, en orden de operación.
+const ESTADOS = [
+  { clave: "PENDIENTE", etiqueta: "pendiente", color: "#c6a27c" },
+  { clave: "EN CAMINO", etiqueta: "en camino", color: "#a94f63" },
+  { clave: "ENTREGADO", etiqueta: "entregado", color: "#8a5a6b" },
+  { clave: "CANCELADO", etiqueta: "cancelado", color: "#5b2333" },
 ];
 
 const BADGES = {
@@ -150,12 +107,10 @@ const BADGES = {
 
 const SERIES = {
   ventas: {
-    ticks: [0, 200, 400, 600, 800, 1000],
     eje: (valor) => `$${valor}k`,
     detalle: (valor) => [`$${valor}k`, "Ventas"],
   },
   pedidos: {
-    ticks: [0, 2, 4, 6, 8, 10],
     eje: (valor) => valor,
     detalle: (valor) => [`${valor} pedidos`, "Pedidos"],
   },
@@ -169,59 +124,278 @@ const ESTILO_TOOLTIP = {
   fontSize: 12,
 };
 
-function Kpi({ etiqueta, valor, icono: Icono, tono }) {
-  return (
-    <article
-      className={`flex flex-col items-center justify-center gap-2.5 rounded-lg px-4 py-7 text-center ${tono}`}
-    >
-      <Icono size={34} strokeWidth={1.5} aria-hidden="true" />
-      <p className="text-[15px]">{etiqueta}</p>
-      <p className="font-display text-[30px] font-semibold leading-none">
-        {valor}
-      </p>
-    </article>
-  );
-}
-
-function Indicador({ etiqueta, valor, icono: Icono, tono }) {
-  return (
-    <article className="flex items-center gap-4 rounded-lg border border-border bg-card px-5 py-5.5">
-      <span
-        className={`flex h-14.5 w-14.5 shrink-0 items-center justify-center rounded-full text-white ${tono}`}
-      >
-        <Icono size={22} strokeWidth={1.7} aria-hidden="true" />
-      </span>
-      <span className="min-w-0">
-        <span className="block text-[13px] text-muted">{etiqueta}</span>
-        <span className="mt-1 block truncate font-display text-[28px] font-semibold leading-tight text-ink">
-          {valor}
-        </span>
-      </span>
-    </article>
-  );
-}
-
-function Panel({ titulo, detalle, children }) {
-  return (
-    <article className="min-w-0 rounded-lg border border-border bg-card p-6">
-      <header className="flex flex-wrap items-baseline gap-3">
-        <h3 className="font-display text-lg font-semibold text-ink">
-          {titulo}
-        </h3>
-        {detalle && (
-          <span className="text-[11px] uppercase tracking-[0.16em] text-muted">
-            {detalle}
-          </span>
-        )}
-      </header>
-      {children}
-    </article>
-  );
-}
-
 export default function Dashboard() {
-  const [metrica, setMetrica] = useState("ventas");
-  const serie = SERIES[metrica];
+  const navigate = useNavigate();
+  const usuario = useSesion();
+  const esAdmin = String(usuario?.rol || "").toLowerCase() === "admin";
+  const [metrica, setMetrica] = useState(esAdmin ? "ventas" : "pedidos");
+  const [datos, setDatos] = useState(null);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState("");
+
+  const cargar = useCallback(
+    async (signal) => {
+      setCargando(true);
+      setError("");
+
+      const ahora = new Date();
+      const inicioMes = `${claveLocal(ahora).slice(0, 7)}-01`;
+      const finMes = claveLocal(ahora);
+
+      // El vendedor no consulta nada que devuelva dinero.
+      const consultas = {
+        resumen: esAdmin ? obtenerResumenDashboard({ signal }) : null,
+        hoy: esAdmin ? obtenerVentasPorDia(1, { signal }) : null,
+        semana: esAdmin
+          ? obtenerVentasPorDia(7, { signal })
+          : obtenerPedidosPorDia(7, { signal }),
+        totales: esAdmin ? obtenerVentasTotales({}, { signal }) : null,
+        mes: esAdmin
+          ? obtenerVentasTotales({ desde: inicioMes, hasta: finMes }, { signal })
+          : null,
+        pedidos: obtenerPedidosRecientes({ signal }),
+        masVendidos: obtenerMasVendidos({ signal }),
+        bajoStock: obtenerProductosBajoStock({ signal }),
+        estados: obtenerPedidosPorEstado({ signal }),
+      };
+
+      const claves = Object.keys(consultas);
+      const respuestas = await Promise.allSettled(
+        claves.map((clave) => consultas[clave] ?? Promise.resolve(null)),
+      );
+
+      if (signal?.aborted) return;
+
+      const resultado = Object.fromEntries(
+        claves.map((clave, indice) => [clave, respuestas[indice]]),
+      );
+      const rechazos = respuestas.filter((r) => r.status === "rejected");
+
+      // Token vencido: se cierra sesión y se vuelve al login.
+      if (rechazos.some((r) => r.reason?.estado === 401)) {
+        cerrarSesion();
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      if (rechazos.some((r) => r.reason?.estado === 403)) {
+        setError("Tu usuario no tiene permisos para ver esta sección.");
+        setCargando(false);
+        return;
+      }
+
+      const valor = (clave) =>
+        resultado[clave]?.status === "fulfilled"
+          ? datosDe(resultado[clave].value, null)
+          : null;
+
+      setDatos({
+        resumen: valor("resumen"),
+        hoy: valor("hoy")?.totalIngresos ?? 0,
+        semana: valor("semana")?.serie ?? [],
+        totales: valor("totales")?.ingresosTotales ?? 0,
+        mes: valor("mes")?.ingresosTotales ?? 0,
+        pedidos: valor("pedidos") ?? [],
+        masVendidos: valor("masVendidos") ?? [],
+        bajoStock: valor("bajoStock") ?? [],
+        estados: valor("estados") ?? [],
+      });
+
+      if (rechazos.length) {
+        setError(
+          "No se pudieron cargar todas las secciones. Revisa que el backend esté encendido.",
+        );
+      }
+
+      setCargando(false);
+    },
+    [esAdmin, navigate],
+  );
+
+  useEffect(() => {
+    const controlador = new AbortController();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    cargar(controlador.signal);
+    return () => controlador.abort();
+  }, [cargar]);
+
+  const resumen = datos?.resumen;
+  const totalPedidos =
+    Number(resumen?.totalPedidos) ||
+    (datos?.estados ?? []).reduce(
+      (suma, fila) => suma + (Number(fila.pedidos) || 0),
+      0,
+    );
+
+  // El vendedor solo tiene la métrica de pedidos (nunca ingresos).
+  const metricaActiva = esAdmin ? metrica : "pedidos";
+  const opcionesMetrica = esAdmin
+    ? [
+        { clave: "ventas", texto: "Ventas" },
+        { clave: "pedidos", texto: "Pedidos" },
+      ]
+    : [{ clave: "pedidos", texto: "Pedidos" }];
+
+  const pedidosDe = useCallback(
+    (estado) =>
+      Number(
+        (datos?.estados ?? []).find((fila) => fila.estado === estado)?.pedidos,
+      ) || 0,
+    [datos],
+  );
+
+  const tarjetas = [
+    {
+      etiqueta: "Ventas de hoy",
+      valor: dinero(datos?.hoy ?? 0),
+      icono: Layers,
+      tono: "bg-dusty-rose text-white",
+    },
+    {
+      etiqueta: "Este mes",
+      valor: dineroCorto(datos?.mes ?? 0),
+      icono: Clock,
+      tono: "bg-[#e9a9a6] text-plum",
+    },
+    {
+      etiqueta: "Ventas totales",
+      valor: dineroCorto(datos?.totales ?? 0),
+      icono: Calendar,
+      tono: "bg-vino text-silk",
+    },
+  ];
+
+  const indicadores = [
+    {
+      etiqueta: "Total pedidos",
+      valor: totalPedidos,
+      icono: ShoppingBag,
+      tono: "bg-dusty-rose",
+    },
+    {
+      etiqueta: "Pendientes",
+      valor: pedidosDe("PENDIENTE"),
+      icono: Clock,
+      tono: "bg-champagne",
+    },
+    {
+      etiqueta: "En camino",
+      valor: pedidosDe("EN CAMINO"),
+      icono: Truck,
+      tono: "bg-mauve",
+    },
+    {
+      etiqueta: "Entregados",
+      valor: pedidosDe("ENTREGADO"),
+      icono: Check,
+      tono: "bg-vino",
+    },
+  ];
+
+  // La gráfica muestra el día más reciente primero, como el diseño original.
+  const ventasSemana = useMemo(
+    () =>
+      [...(datos?.semana ?? [])].reverse().map((dia) => ({
+        dia: fechaDia(dia.fecha),
+        ventas: Math.round((Number(dia.ingresos) || 0) / 1000),
+        pedidos: Number(dia.pedidos) || 0,
+      })),
+    [datos],
+  );
+
+  const ticks = useMemo(() => {
+    const maximo = Math.max(
+      1,
+      ...ventasSemana.map((dia) => Number(dia[metricaActiva]) || 0),
+    );
+    const paso = Math.max(1, Math.ceil(maximo / 4));
+
+    return Array.from({ length: 5 }, (_, indice) => paso * indice);
+  }, [ventasSemana, metricaActiva]);
+
+  const masVendidos = useMemo(
+    () =>
+      (datos?.masVendidos ?? []).slice(0, 5).map((producto, indice) => ({
+        nombre: producto.nombre,
+        valor: Number(producto.unidadesVendidas) || 0,
+        color: PALETA[indice % PALETA.length],
+      })),
+    [datos],
+  );
+
+  const ultimosPedidos = useMemo(
+    () =>
+      (datos?.pedidos ?? []).slice(0, 5).map((pedido) => ({
+        id: pedido.id_pedido,
+        cliente: pedido.cliente || "Invitada",
+        fecha: fechaPedido(pedido.fecha),
+        estado: String(pedido.estado || "").toLowerCase(),
+        total: dinero(pedido.total),
+      })),
+    [datos],
+  );
+
+  const stockBajo = useMemo(
+    () =>
+      (datos?.bajoStock ?? []).slice(0, 6).map((variante) => ({
+        id: variante.id_variante,
+        producto: variante.nombre,
+        variante: `${variante.talla} · ${variante.color}`,
+        unidades: Number(variante.stock) || 0,
+        agotado: Boolean(variante.agotado),
+      })),
+    [datos],
+  );
+
+  const pedidosPorEstado = useMemo(
+    () =>
+      ESTADOS.map(({ clave, etiqueta, color }) => {
+        const fila = (datos?.estados ?? []).find(
+          (registro) => registro.estado === clave,
+        );
+        const cantidad = Number(fila?.pedidos) || 0;
+
+        return {
+          estado: etiqueta,
+          cantidad,
+          porcentaje:
+            totalPedidos > 0 ? Math.round((cantidad / totalPedidos) * 100) : 0,
+          total: dinero(fila?.ingresos ?? 0),
+          color,
+        };
+      }),
+    [datos, totalPedidos],
+  );
+
+  const serie = SERIES[metricaActiva];
+
+  if (cargando) {
+    return (
+      <section className="space-y-5">
+        <div className="h-9 w-56 animate-pulse rounded-md bg-border" />
+        <div className="grid gap-3.5 md:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, indice) => (
+            <div
+              key={indice}
+              className="h-[150px] animate-pulse rounded-lg bg-border"
+            />
+          ))}
+        </div>
+        <div className="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, indice) => (
+            <div
+              key={indice}
+              className="h-[92px] animate-pulse rounded-lg bg-border"
+            />
+          ))}
+        </div>
+        <div className="grid gap-5 lg:grid-cols-2">
+          <div className="h-[390px] animate-pulse rounded-lg bg-border" />
+          <div className="h-[390px] animate-pulse rounded-lg bg-border" />
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="space-y-5">
@@ -229,44 +403,56 @@ export default function Dashboard() {
         Resumen general
       </h1>
 
-      <div className="grid gap-3.5 md:grid-cols-3">
-        {RESUMEN.map((item) => (
-          <Kpi key={item.etiqueta} {...item} />
-        ))}
-      </div>
+      {error && (
+        <div
+          role="alert"
+          className="rounded-lg border border-dusty-rose/40 bg-card px-4 py-3 text-sm text-accent"
+        >
+          {error}
+        </div>
+      )}
+
+      {esAdmin && (
+        <div className="grid gap-3.5 md:grid-cols-3">
+          {tarjetas.map((item) => (
+            <Kpi key={item.etiqueta} {...item} />
+          ))}
+        </div>
+      )}
 
       <div className="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
-        {INDICADORES.map((item) => (
+        {indicadores.map((item) => (
           <Indicador key={item.etiqueta} {...item} />
         ))}
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
-        <Panel titulo="Ventas de la semana">
-          <div className="mb-4 mt-4 flex gap-1.5 border-b border-border">
-            {[
-              { clave: "ventas", texto: "Ventas" },
-              { clave: "pedidos", texto: "Pedidos" },
-            ].map((opcion) => (
-              <button
-                key={opcion.clave}
-                type="button"
-                onClick={() => setMetrica(opcion.clave)}
-                className={`-mb-px border-b-2 px-3.5 py-2 text-[13px] font-medium transition-colors ${
-                  metrica === opcion.clave
-                    ? "border-accent text-accent"
-                    : "border-transparent text-muted hover:text-ink"
-                }`}
-              >
-                {opcion.texto}
-              </button>
-            ))}
-          </div>
+        <Panel
+          titulo={esAdmin ? "Ventas de la semana" : "Pedidos de la semana"}
+        >
+          {esAdmin && (
+            <div className="mb-4 mt-4 flex gap-1.5 border-b border-border">
+              {opcionesMetrica.map((opcion) => (
+                <button
+                  key={opcion.clave}
+                  type="button"
+                  onClick={() => setMetrica(opcion.clave)}
+                  className={`-mb-px border-b-2 px-3.5 py-2 text-[13px] font-medium transition-colors ${
+                    metricaActiva === opcion.clave
+                      ? "border-accent text-accent"
+                      : "border-transparent text-muted hover:text-ink"
+                  }`}
+                >
+                  {opcion.texto}
+                </button>
+              ))}
+            </div>
+          )}
 
-          <div className="h-[260px]">
+          <div className={esAdmin ? "h-[260px]" : "mt-4 h-[292px]"}>
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
-                data={VENTAS_SEMANA}
+                data={ventasSemana}
                 margin={{ top: 8, right: 8, left: -10, bottom: 0 }}
               >
                 <CartesianGrid stroke="var(--border)" vertical={false} />
@@ -277,8 +463,8 @@ export default function Dashboard() {
                   axisLine={false}
                 />
                 <YAxis
-                  ticks={serie.ticks}
-                  domain={[0, serie.ticks[serie.ticks.length - 1]]}
+                  ticks={ticks}
+                  domain={[0, ticks[ticks.length - 1]]}
                   tickFormatter={serie.eje}
                   tick={{ fill: "var(--muted)", fontSize: 11 }}
                   tickLine={false}
@@ -292,7 +478,7 @@ export default function Dashboard() {
                 />
                 <Line
                   type="linear"
-                  dataKey={metrica}
+                  dataKey={metricaActiva}
                   stroke="var(--accent)"
                   strokeWidth={2.5}
                   dot={{ r: 4, fill: "var(--accent)", strokeWidth: 0 }}
@@ -304,114 +490,136 @@ export default function Dashboard() {
         </Panel>
 
         <Panel titulo="Productos más vendidos">
-          <ul className="mb-2.5 mt-5 flex flex-wrap justify-center gap-x-[18px] gap-y-1.5 text-xs text-muted">
-            {MAS_VENDIDOS.map((fila) => (
-              <li key={fila.nombre} className="flex items-center">
-                <span
-                  aria-hidden="true"
-                  className="mr-1.5 inline-block h-[9px] w-[22px]"
-                  style={{ backgroundColor: fila.color }}
-                />
-                {fila.nombre}
-              </li>
-            ))}
-          </ul>
+          {masVendidos.length === 0 ? (
+            <p className="mt-5 text-sm text-muted">
+              Aún no hay ventas registradas.
+            </p>
+          ) : (
+            <>
+              <ul className="mb-2.5 mt-5 flex flex-wrap justify-center gap-x-[18px] gap-y-1.5 text-xs text-muted">
+                {masVendidos.map((fila) => (
+                  <li key={fila.nombre} className="flex items-center">
+                    <span
+                      aria-hidden="true"
+                      className="mr-1.5 inline-block h-[9px] w-[22px]"
+                      style={{ backgroundColor: fila.color }}
+                    />
+                    {fila.nombre}
+                  </li>
+                ))}
+              </ul>
 
-          <div className="mx-auto h-[300px] max-w-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={MAS_VENDIDOS}
-                  dataKey="valor"
-                  nameKey="nombre"
-                  outerRadius="95%"
-                  stroke="var(--card)"
-                  strokeWidth={2}
-                >
-                  {MAS_VENDIDOS.map((fila) => (
-                    <Cell key={fila.nombre} fill={fila.color} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  formatter={(valor, nombre) => [`${valor} uds`, nombre]}
-                  contentStyle={ESTILO_TOOLTIP}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+              <div className="mx-auto h-[300px] max-w-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={masVendidos}
+                      dataKey="valor"
+                      nameKey="nombre"
+                      outerRadius="95%"
+                      stroke="var(--card)"
+                      strokeWidth={2}
+                    >
+                      {masVendidos.map((fila) => (
+                        <Cell key={fila.nombre} fill={fila.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip
+                      formatter={(valor, nombre) => [`${valor} uds`, nombre]}
+                      contentStyle={ESTILO_TOOLTIP}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </>
+          )}
         </Panel>
       </div>
 
       <div className="grid items-start gap-5 lg:grid-cols-5">
         <div className="lg:col-span-3">
           <Panel titulo="Últimos pedidos">
-            <table className="mt-3.5 w-full border-collapse text-[15px]">
-              <thead>
-                <tr className="border-b border-border text-left text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
-                  <th className="pb-2.5 font-medium">Pedido</th>
-                  <th className="pb-2.5 font-medium">Cliente</th>
-                  <th className="pb-2.5 font-medium">Estado</th>
-                  <th className="pb-2.5 text-right font-medium">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {ULTIMOS_PEDIDOS.map((pedido) => (
-                  <tr
-                    key={pedido.id}
-                    className="border-b border-border last:border-0"
-                  >
-                    <td className="py-[13px] pr-2 text-muted">#{pedido.id}</td>
-                    <td className="py-[13px] pr-2 text-ink">
-                      {pedido.cliente}
-                      <small className="block text-xs text-muted">
-                        {pedido.fecha}
-                      </small>
-                    </td>
-                    <td className="py-[13px] pr-2">
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-[9px] py-1 text-[10px] uppercase tracking-[0.12em] ${BADGES[pedido.estado]}`}
-                      >
-                        <span className="h-1.5 w-1.5 bg-current" />
-                        {pedido.estado}
-                      </span>
-                    </td>
-                    <td className="py-[13px] text-right text-ink">
-                      {pedido.total}
-                    </td>
+            {ultimosPedidos.length === 0 ? (
+              <p className="mt-4 text-sm text-muted">Todavía no hay pedidos.</p>
+            ) : (
+              <table className="mt-3.5 w-full border-collapse text-[15px]">
+                <thead>
+                  <tr className="border-b border-border text-left text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
+                    <th className="pb-2.5 font-medium">Pedido</th>
+                    <th className="pb-2.5 font-medium">Cliente</th>
+                    <th className="pb-2.5 font-medium">Estado</th>
+                    <th className="pb-2.5 text-right font-medium">Total</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {ultimosPedidos.map((pedido) => (
+                    <tr
+                      key={pedido.id}
+                      className="border-b border-border last:border-0"
+                    >
+                      <td className="py-[13px] pr-2 text-muted">
+                        #{pedido.id}
+                      </td>
+                      <td className="py-[13px] pr-2 text-ink">
+                        {pedido.cliente}
+                        <small className="block text-xs text-muted">
+                          {pedido.fecha}
+                        </small>
+                      </td>
+                      <td className="py-[13px] pr-2">
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-[9px] py-1 text-[10px] uppercase tracking-[0.12em] ${
+                            BADGES[pedido.estado] ?? "bg-act text-ink"
+                          }`}
+                        >
+                          <span className="h-1.5 w-1.5 bg-current" />
+                          {pedido.estado || "sin estado"}
+                        </span>
+                      </td>
+                      <td className="py-[13px] text-right text-ink">
+                        {pedido.total}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </Panel>
         </div>
 
         <div className="lg:col-span-2">
           <Panel titulo="Stock bajo">
-            <ul className="mt-2.5">
-              {STOCK_BAJO.map((fila) => (
-                <li
-                  key={`${fila.producto}-${fila.variante}`}
-                  className="flex items-center justify-between gap-2.5 border-b border-border py-3 last:border-0"
-                >
-                  <span className="text-ink">
-                    {fila.producto}
-                    <small className="block text-[11px] uppercase tracking-[0.1em] text-muted">
-                      {fila.variante}
-                    </small>
-                  </span>
-                  <span className="bg-act px-[9px] py-[3px] text-xs text-ink">
-                    {fila.unidades} uds
-                  </span>
-                </li>
-              ))}
-            </ul>
+            {stockBajo.length === 0 ? (
+              <p className="mt-4 text-sm text-muted">
+                Todo el inventario está en orden.
+              </p>
+            ) : (
+              <ul className="mt-2.5">
+                {stockBajo.map((fila) => (
+                  <li
+                    key={fila.id}
+                    className="flex items-center justify-between gap-2.5 border-b border-border py-3 last:border-0"
+                  >
+                    <span className="text-ink">
+                      {fila.producto}
+                      <small className="block text-[11px] uppercase tracking-[0.1em] text-muted">
+                        {fila.variante}
+                      </small>
+                    </span>
+                    <span className="bg-act px-[9px] py-[3px] text-xs text-ink">
+                      {fila.agotado ? "Agotado" : `${fila.unidades} uds`}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </Panel>
         </div>
       </div>
 
       <Panel titulo="Pedidos por estado" detalle="Historial completo">
         <div className="mt-4 grid gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
-          {PEDIDOS_POR_ESTADO.map((fila) => (
+          {pedidosPorEstado.map((fila) => (
             <article
               key={fila.estado}
               className="rounded-lg border border-border bg-page p-4"
@@ -423,12 +631,17 @@ export default function Dashboard() {
               <p className="mt-2.5 font-display text-[26px] font-semibold leading-none text-ink">
                 {fila.cantidad}
               </p>
-              <p className="mt-1 text-[13px] text-muted">{fila.total}</p>
+              {esAdmin && (
+                <p className="mt-1 text-[13px] text-muted">{fila.total}</p>
+              )}
               <div className="mt-3 h-1 bg-card">
                 <div
                   className="h-full"
                   style={{
-                    width: `${Math.max(fila.porcentaje, 4)}%`,
+                    width:
+                      fila.porcentaje > 0
+                        ? `${Math.max(fila.porcentaje, 4)}%`
+                        : 0,
                     backgroundColor: fila.color,
                   }}
                 />

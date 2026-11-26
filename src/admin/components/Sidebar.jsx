@@ -77,7 +77,7 @@ export default function Sidebar({ abierto }) {
           aria-label="Lujo Rosado, ir a la tienda"
           className="inline-flex w-fit items-center transition-opacity hover:opacity-80"
         >
-          <BrandLogo className="h-7" />
+          <BrandLogo tono="brand" className="h-7" />
         </Link>
       </div>
 
