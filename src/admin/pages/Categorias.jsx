@@ -1,6 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertCircle, Pencil, Plus, Search, Tags, Trash2 } from "lucide-react";
+import {
+  AlertCircle,
+  FolderOpen,
+  Package,
+  Pencil,
+  Plus,
+  Search,
+  Tags,
+  Trash2,
+} from "lucide-react";
 import {
   actualizarCategoria,
   crearCategoria,
@@ -10,6 +19,7 @@ import {
 import { normalizarTexto } from "../../api/catalogo";
 import { cerrarSesion } from "../../api/sesion";
 import Aviso from "../components/Aviso";
+import { Kpi } from "../components/Tarjetas";
 import Ventana from "../components/Ventana";
 
 const campoBase =

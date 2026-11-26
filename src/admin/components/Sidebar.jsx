@@ -30,8 +30,8 @@ const menuItems = [
     soloAdmin: true,
   },
   {
-    title: "Clientes",
-    path: "/admin/clientes",
+    title: "Usuarios",
+    path: "/admin/usuarios",
     icon: Users,
     soloAdmin: true,
   },

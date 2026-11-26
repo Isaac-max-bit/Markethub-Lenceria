@@ -59,6 +59,17 @@ export function obtenerToken() {
   return null;
 }
 
+/** Actualiza los datos del usuario guardado (p. ej. tras editar el perfil) sin tocar el token. */
+export function actualizarUsuarioSesion(usuario) {
+  for (const almacen of [localStorage, sessionStorage]) {
+    if (almacen.getItem(CLAVE_USUARIO)) {
+      almacen.setItem(CLAVE_USUARIO, JSON.stringify(usuario));
+      emitirCambio();
+      return;
+    }
+  }
+}
+
 export function cerrarSesion() {
   for (const almacen of [localStorage, sessionStorage]) {
     almacen.removeItem(CLAVE_USUARIO);

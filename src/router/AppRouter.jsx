@@ -22,6 +22,7 @@ import SizeGuide from "../pages/SizeGuide";
 import Shipping from "../pages/Shipping";
 import Returns from "../pages/Returns";
 import Faq from "../pages/Faq";
+import Account from "../pages/Account";
 
 // Administración
 import RutaAdmin from "../admin/components/RutaAdmin";
@@ -29,6 +30,7 @@ import AdminLayout from "../admin/layouts/AdminLayout";
 import Dashboard from "../admin/pages/Dashboard";
 import Productos from "../admin/pages/Productos";
 import Categorias from "../admin/pages/Categorias";
+import Usuarios from "../admin/pages/Usuarios";
 import Proximamente from "../admin/pages/Proximamente";
 
 export default function AppRouter() {
@@ -63,6 +65,7 @@ export default function AppRouter() {
           <Route path="/envios" element={<Shipping />} />
           <Route path="/devoluciones" element={<Returns />} />
           <Route path="/preguntas-frecuentes" element={<Faq />} />
+          <Route path="/cuenta/*" element={<Account />} />
         </Route>
 
         {/* PANEL ADMINISTRATIVO (solo rol admin) */}
@@ -71,6 +74,8 @@ export default function AppRouter() {
             <Route index element={<Dashboard />} />
             <Route path="productos" element={<Productos />} />
             <Route path="categorias" element={<Categorias />} />
+            <Route path="usuarios" element={<Usuarios />} />
+            <Route path="clientes" element={<Navigate to="/admin/usuarios" replace />} />
             <Route path="*" element={<Proximamente />} />
           </Route>
         </Route>

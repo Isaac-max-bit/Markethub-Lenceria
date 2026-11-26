@@ -234,15 +234,25 @@ export default function Navbar() {
             </button>
 
             {usuario ? (
-              <button
-                type="button"
-                onClick={salir}
-                aria-label={`Cerrar sesión de ${usuario.nombre}`}
-                title={`Hola, ${usuario.nombre}. Cerrar sesión`}
-                className={`${iconButton} hidden xl:flex`}
-              >
-                <LogOut size={18} strokeWidth={ICON_STROKE} />
-              </button>
+              <>
+                <Link
+                  to="/cuenta"
+                  aria-label={`Mi cuenta (${usuario.nombre})`}
+                  title={`Hola, ${usuario.nombre}`}
+                  className={`${iconButton} hidden xl:flex`}
+                >
+                  <User size={18} strokeWidth={ICON_STROKE} />
+                </Link>
+                <button
+                  type="button"
+                  onClick={salir}
+                  aria-label="Cerrar sesión"
+                  title="Cerrar sesión"
+                  className={`${iconButton} hidden xl:flex`}
+                >
+                  <LogOut size={18} strokeWidth={ICON_STROKE} />
+                </button>
+              </>
             ) : (
               <Link
                 to="/login"
@@ -365,9 +375,12 @@ export default function Navbar() {
             <li>
               {usuario ? (
                 <div className="flex items-center justify-between gap-4 border-b border-border py-3">
-                  <span className="truncate text-sm tracking-wide text-plum">
-                    Hola, {usuario.nombre}
-                  </span>
+                  <Link
+                    to="/cuenta"
+                    className="truncate text-sm tracking-wide text-plum hover:text-wine"
+                  >
+                    Hola, {usuario.nombre} · Mi cuenta
+                  </Link>
                   <button
                     type="button"
                     onClick={salir}
